@@ -12,3 +12,17 @@ input LoginInput {
 input UpdateUserInput{
   name: String
 }
+
+input CreateDoctorInput {
+  name: String!
+  specialty: String!
+  email: String!
+  phone: String!
+}
+
+input CreateAppointmentInput {
+  doctorId: ID!
+  date: String!
+  startTime: String!
+  endTime: String!
+}

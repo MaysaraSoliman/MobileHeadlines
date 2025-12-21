@@ -14,3 +14,28 @@ type AuthPayload {
 type UpdatedUserResponse {
   user: User!
 }
+
+type Doctor {
+  id: ID!
+  name: String!
+  specialty: String!
+  email: String!
+  phone: String!
+  createdAt: String!
+}
+
+type Appointment {
+  id: ID!
+  doctor: Doctor!
+  date: String!
+  startTime: String!
+  endTime: String!
+  status: AppointmentStatus!
+  createdAt: String!
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+}

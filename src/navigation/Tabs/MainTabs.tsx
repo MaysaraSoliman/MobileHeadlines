@@ -5,8 +5,14 @@ import FavoritesScreen from "../../../screens/FavoritesScreen/FavoritesScreen";
 import ScreenNames from "../ScreenNames";
 import ScreenStacks from "../ScreenStacks";
 import HomeStack from "../Stacks/HomeStack";
-import { FavoritesIcon, HomeIcon, SettingsIcon } from "../../Icons/Icons";
+import {
+  FavoritesIcon,
+  HomeIcon,
+  SettingsIcon,
+  AppointmentsIcon,
+} from "../../Icons/Icons";
 import SettingsStack from "../Stacks/SettingsStack";
+import AppointmentsStack from "../Stacks/AppointmentsStack";
 
 export default function MainTabs() {
   const Tab = createBottomTabNavigator();
@@ -36,6 +42,14 @@ export default function MainTabs() {
         options={{
           tabBarLabel: "Favorites",
           tabBarIcon: FavoritesIcon,
+        }}
+      />
+      <Tab.Screen
+        name={ScreenStacks.AppointmentsStack}
+        component={AppointmentsStack}
+        options={{
+          tabBarLabel: "Appointments",
+          tabBarIcon: AppointmentsIcon,
         }}
       />
       <Tab.Screen

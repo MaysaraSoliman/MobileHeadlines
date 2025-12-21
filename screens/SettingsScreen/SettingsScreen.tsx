@@ -5,8 +5,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  RefreshControl,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
@@ -15,7 +16,14 @@ import { useAuth } from "../../src/context/AuthContext";
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refreshUser();
+    setRefreshing(false);
+  }, [refreshUser]);
 
   const sections = [
     {
@@ -76,7 +84,12 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.contentContainer}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>

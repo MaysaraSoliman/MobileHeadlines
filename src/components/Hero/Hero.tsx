@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import ScreenNames from "../../navigation/ScreenNames";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { NewsArticle } from "../../types/types";
+// import { API_HEADLINES_TOKEN } from "@env";
 
 type RootStackParamList = {
   ArticleDetails: { item: any };
@@ -38,10 +39,10 @@ export default function Hero() {
 
     try {
       const res = await axios.get(
-        `https://newsapi.org/v2/top-headlines?country=us&page=${page}&pageSize=5&apiKey=5fc9bc51a87643a3a0ed7efb2127a151`
+        `https://newsapi.org/v2/top-headlines?country=us&page=${page}&pageSize=5&apiKey=b27d8cbb8acb4fd88f528d41ffb96802`
       );
 
-      setNews((prev: any) => {
+      setNews((prev: NewsArticle[]) => {
         const newArticles = res.data.articles.filter(
           (item: any) => item.urlToImage
         );

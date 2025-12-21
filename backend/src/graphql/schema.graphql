@@ -3,10 +3,14 @@
 
 type Query {
   me: User
+  doctors: [Doctor!]!
+  appointments: [Appointment!]!
 }
 
 type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   updateUser(input: UpdateUserInput!): UpdatedUserResponse!
+  createDoctor(input: CreateDoctorInput!): Doctor!
+  createAppointment(input: CreateAppointmentInput!): Appointment!
 }

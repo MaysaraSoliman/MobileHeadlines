@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../src/context/AuthContext";
@@ -17,6 +19,13 @@ export default function EditProfileScreen() {
   const { user, refreshUser } = useAuth();
   const navigation = useNavigation();
   const [name, setName] = useState(user?.name || "");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refreshUser();
+    setRefreshing(false);
+  }, [refreshUser]);
 
   const [updateProfile, { loading }] = useMutation(updateUserMutation, {
     onCompleted: async () => {
@@ -40,7 +49,12 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.form}>
         <Text style={styles.label}>Full Name</Text>
         <TextInput
@@ -69,7 +83,7 @@ export default function EditProfileScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
