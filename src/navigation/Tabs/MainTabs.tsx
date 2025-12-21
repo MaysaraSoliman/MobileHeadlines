@@ -6,7 +6,7 @@ import ScreenNames from "../ScreenNames";
 import ScreenStacks from "../ScreenStacks";
 import HomeStack from "../Stacks/HomeStack";
 import { FavoritesIcon, HomeIcon, SettingsIcon } from "../../Icons/Icons";
-import SettingsScreen from "../../../screens/SettingsScreen/SettingsScreen";
+import SettingsStack from "../Stacks/SettingsStack";
 
 export default function MainTabs() {
   const Tab = createBottomTabNavigator();
@@ -39,8 +39,8 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name={ScreenNames.SettingsScreen}
-        component={SettingsScreen}
+        name={ScreenStacks.SettingsStack}
+        component={SettingsStack}
         options={{
           tabBarLabel: "Settings",
           tabBarIcon: SettingsIcon,

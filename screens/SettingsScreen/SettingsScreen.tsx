@@ -4,20 +4,33 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import React from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
+import ScreenNames from "../../src/navigation/ScreenNames";
+import { useAuth } from "../../src/context/AuthContext";
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
 
   const sections = [
     {
       items: [
-        { icon: "person", label: "My Profile", type: "ionicons" },
-        { icon: "settings", label: "Account Settings", type: "ionicons" },
+        {
+          icon: "create-outline",
+          label: "Edit Profile",
+          type: "ionicons",
+          screen: ScreenNames.EditProfileScreen,
+        },
+        {
+          icon: "settings-outline",
+          label: "Account Settings",
+          type: "ionicons",
+        },
         {
           icon: "phone-portrait-outline",
           label: "App Settings",
@@ -38,7 +51,7 @@ export default function SettingsScreen() {
           type: "ionicons",
         },
         {
-          icon: "flash-outline",
+          icon: "information-circle-outline",
           label: "About Jetpack for iOS",
           type: "ionicons",
         },
@@ -56,9 +69,34 @@ export default function SettingsScreen() {
     });
   };
 
+  const handlePress = (item: any) => {
+    if (item.screen) {
+      navigation.navigate(item.screen);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.contentContainer}>
+        {/* Profile Header */}
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={require("../../assets/images.png")} // Using the same asset as Header
+              style={styles.avatar}
+            />
+            <View style={styles.editBadge}>
+              <Ionicons name="pencil" size={12} color="#fff" />
+            </View>
+          </View>
+          <Text style={styles.userName}>{user?.name || "User Name"}</Text>
+          <View style={styles.emailContainer}>
+            <Text style={styles.userEmail}>
+              {user?.email || "user@email.com"}
+            </Text>
+          </View>
+        </View>
+
         {sections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
             {section.items.map((item, itemIndex) => (
@@ -68,6 +106,7 @@ export default function SettingsScreen() {
                   styles.row,
                   itemIndex === section.items.length - 1 && styles.lastRow,
                 ]}
+                onPress={() => handlePress(item)}
               >
                 <View style={styles.rowLeft}>
                   {item.type === "ionicons" ? (
@@ -104,25 +143,71 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f2f2f7",
+    backgroundColor: "#f0f0f5",
   },
   contentContainer: {
-    padding: 16,
+    paddingBottom: 30,
+  },
+  profileHeader: {
+    alignItems: "center",
+    paddingVertical: 30,
+    backgroundColor: "#fff",
+    marginBottom: 20,
+  },
+  avatarContainer: {
+    position: "relative",
+    marginBottom: 15,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  editBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#007AFF",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: 8,
+  },
+  emailContainer: {
+    backgroundColor: "#e1f0ff",
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  userEmail: {
+    color: "#007AFF",
+    fontSize: 14,
+    fontWeight: "500",
   },
   section: {
     backgroundColor: "#fff",
-    borderRadius: 10,
     marginBottom: 20,
-    overflow: "hidden",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#e0e0e0",
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#c6c6c8",
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   lastRow: {
     borderBottomWidth: 0,
@@ -132,27 +217,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    marginRight: 12,
+    marginRight: 10,
     width: 24,
     textAlign: "center",
   },
   rowLabel: {
     fontSize: 16,
-    color: "#000",
-  },
-  footerText: {
-    fontSize: 13,
-    color: "#8e8e93",
-    marginBottom: 8,
-    marginLeft: 16,
-    textTransform: "uppercase",
+    color: "#333",
   },
   logoutButton: {
+    marginHorizontal: 20,
     backgroundColor: "#fff",
+    padding: 15,
     borderRadius: 10,
-    paddingVertical: 12,
     alignItems: "center",
-    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ff3b30",
   },
   logoutText: {
     color: "#ff3b30",

@@ -1,14 +1,21 @@
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import ScreenStacks from "../../navigation/ScreenStacks";
 
-export default function Header() {
+export default function Header({ userName }: { userName?: string }) {
+  const navigation = useNavigation<any>();
+
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../../../assets/images.png")}
-        style={styles.image}
-      />
-      <Text style={styles.text}>Dentolize App</Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate(ScreenStacks.SettingsStack)}
+      >
+        <Image
+          source={require("../../../assets/images.png")}
+          style={styles.image}
+        />
+      </TouchableOpacity>
       <Image
         source={require("../../../assets/notification-bell-icon.png")}
         style={styles.image}
@@ -27,6 +34,11 @@ const styles = StyleSheet.create({
   text: {
     color: "red",
     fontSize: 20,
+    fontWeight: "bold",
+  },
+  subText: {
+    color: "#333",
+    fontSize: 14,
   },
   image: {
     width: 50,

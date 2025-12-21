@@ -1,0 +1,16 @@
+type User {
+  id: ID!
+  email: String!
+  name: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type UpdatedUserResponse {
+  user: User!
+}

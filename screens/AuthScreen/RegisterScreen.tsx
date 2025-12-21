@@ -15,63 +15,62 @@ import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { gql, useMutation } from "@apollo/client";
-import ScreenStacks from "../../src/navigation/ScreenStacks";
-import ScreenNames from "../../src/navigation/ScreenNames";
 import { useAuth } from "../../src/context/AuthContext";
+import ScreenNames from "../../src/navigation/ScreenNames";
+import ScreenStacks from "../../src/navigation/ScreenStacks";
 
-const LOGIN_MUTATION = gql`
-  mutation Login($input: LoginInput!) {
-    login(input: $input) {
+const REGISTER_MUTATION = gql`
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
       token
       user {
         id
         email
         name
-        createdAt
-        updatedAt
       }
     }
   }
 `;
 
 type RootStackParamList = {
+  [ScreenNames.AuthScreen]: undefined;
   [ScreenStacks.MainTabs]: undefined;
-  [ScreenNames.RegisterScreen]: undefined;
 };
 
-type AuthNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type RegisterNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width, height } = Dimensions.get("window");
 
-export default function AuthScreen() {
-  const { reset, navigate } = useNavigation<AuthNavigationProp>();
-  const { signIn } = useAuth();
+export default function RegisterScreen() {
+  const { navigate, reset } = useNavigation<RegisterNavigationProp>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
-  const [login, { loading }] = useMutation(LOGIN_MUTATION, {
+  const [register, { loading }] = useMutation(REGISTER_MUTATION, {
     onCompleted: async (data: any) => {
       try {
-        await signIn(data.login.token);
+        Alert.alert("Success", "Account created successfully!");
         reset({
           index: 0,
           routes: [{ name: ScreenStacks.MainTabs }],
         });
-      } catch (error) {
-        console.error("Error signing in:", error);
+      } catch (e) {
+        console.error(e);
+        Alert.alert("Error", "Failed to login after registration");
       }
     },
     onError: (error: any) => {
-      Alert.alert("Login Failed", error.message);
+      Alert.alert("Error", error.message);
     },
   });
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter both email and password");
+  const handleRegister = () => {
+    if (!email || !password || !name) {
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    login({ variables: { input: { email, password } } });
+    register({ variables: { input: { email, password, name } } });
   };
 
   return (
@@ -85,7 +84,15 @@ export default function AuthScreen() {
         style={styles.container}
       >
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Login</Text>
+          <Text style={styles.title}>Create Account</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            placeholderTextColor="#666"
+            value={name}
+            onChangeText={setName}
+          />
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -103,28 +110,25 @@ export default function AuthScreen() {
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
+            style={styles.registerButton}
+            onPress={handleRegister}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.loginButtonText}>Log In</Text>
+              <Text style={styles.registerButtonText}>Sign Up</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.registerLink}
-            onPress={() => navigate(ScreenNames.RegisterScreen)}
+            style={styles.loginLink}
+            onPress={() => navigate(ScreenNames.AuthScreen)}
           >
-            <Text style={styles.registerLinkText}>
-              Don't have an account? Sign Up
+            <Text style={styles.loginLinkText}>
+              Already have an account? Log In
             </Text>
           </TouchableOpacity>
         </View>
@@ -177,31 +181,24 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     color: "#333",
   },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: "#666",
-    fontSize: 14,
-  },
-  loginButton: {
+  registerButton: {
     width: "100%",
     height: 50,
     backgroundColor: "#007AFF",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 10,
   },
-  loginButtonText: {
+  registerButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
-  registerLink: {
+  loginLink: {
     marginTop: 20,
   },
-  registerLinkText: {
+  loginLinkText: {
     color: "#007AFF",
     fontSize: 14,
   },
