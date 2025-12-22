@@ -89,4 +89,62 @@ const createAppointment = async (parent, { input }, context) => {
   };
 };
 
-module.exports = { createAppointment };
+const updateAppointment = async (parent, { input }, context) => {
+  const { id, date, startTime, endTime, status } = input;
+  const { prisma } = context;
+
+  const existingAppt = await prisma.appointment.findUnique({
+    where: { id },
+  });
+
+  if (!existingAppt) {
+    throw new Error('Appointment not found');
+  }
+
+  const newStartTime = startTime || existingAppt.startTime;
+  const newEndTime = endTime || existingAppt.endTime;
+
+  // Validate Time
+  const [startH, startM] = newStartTime.split(':').map(Number);
+  const [endH, endM] = newEndTime.split(':').map(Number);
+  const startTotal = startH * 60 + startM;
+  const endTotal = endH * 60 + endM;
+
+  if (startTotal >= endTotal) {
+    throw new Error('Start time must be before end time');
+  }
+
+  const dataToUpdate = {};
+  if (status) dataToUpdate.status = status;
+  if (date) dataToUpdate.date = new Date(date);
+  if (startTime) dataToUpdate.startTime = startTime;
+  if (endTime) dataToUpdate.endTime = endTime;
+
+  // If time is changing, simple overlap check could be added here similar to create
+  // For now, simple update
+
+  const appointment = await prisma.appointment.update({
+    where: { id },
+    data: dataToUpdate,
+    include: {
+      doctor: true,
+      patient: true,
+    },
+  });
+
+  return {
+    ...appointment,
+    date: appointment.date.toISOString(),
+    createdAt: appointment.createdAt.toISOString(),
+    doctor: {
+      ...appointment.doctor,
+      createdAt: appointment.doctor.createdAt.toISOString(),
+    },
+    patient: {
+      ...appointment.patient,
+      createdAt: appointment.patient.createdAt.toISOString(),
+    },
+  };
+};
+
+module.exports = { createAppointment, updateAppointment };

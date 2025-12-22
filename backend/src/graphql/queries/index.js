@@ -1,7 +1,7 @@
 const { me } = require('./me.query');
 const { doctors } = require('./doctor.query');
-const { appointments, appointmentsByDate } = require('./appointment.query');
-const { patients } = require('./patient.query');
+const { appointments, appointmentsByDate, appointment } = require('./appointment.query');
+const { patients, patient } = require('./patient.query');
 
 module.exports = {
   Query: {
@@ -9,6 +9,8 @@ module.exports = {
     doctors,
     appointments,
     appointmentsByDate,
+    appointment,
     patients,
+    patient,
   },
 };

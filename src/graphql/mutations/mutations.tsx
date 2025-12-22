@@ -48,4 +48,34 @@ const createPatientMutation = gql`
   }
 `;
 
-export { updateUserMutation, createAppointmentMutation, createPatientMutation };
+const updatePatientMutation = gql`
+  mutation UpdatePatient($input: UpdatePatientInput!) {
+    updatePatient(input: $input) {
+      id
+      firstName
+      lastName
+      email
+      phone
+    }
+  }
+`;
+
+const updateAppointmentMutation = gql`
+  mutation UpdateAppointment($input: UpdateAppointmentInput!) {
+    updateAppointment(input: $input) {
+      id
+      date
+      startTime
+      endTime
+      status
+    }
+  }
+`;
+
+export {
+  updateUserMutation,
+  createAppointmentMutation,
+  createPatientMutation,
+  updatePatientMutation,
+  updateAppointmentMutation,
+};

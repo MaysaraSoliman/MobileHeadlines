@@ -19,3 +19,34 @@ export type NewsApiResponse = {
   totalResults: number;
   articles: NewsArticle[];
 };
+
+export type AppointmentStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELED"
+  | "COMPLETED";
+
+export type Doctor = {
+  id: string;
+  name: string;
+  specialty: string;
+  phone?: string;
+};
+
+export type Patient = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+};
+
+export type Appointment = {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: AppointmentStatus;
+  doctor: Doctor;
+  patient: Patient;
+};

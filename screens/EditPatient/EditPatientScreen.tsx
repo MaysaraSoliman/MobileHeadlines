@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,33 +6,51 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { useMutation } from "@apollo/client";
-import { useNavigation } from "@react-navigation/native";
-import { createPatientMutation } from "../../src/graphql/mutations/mutations";
-import { GET_PATIENTS } from "../../src/graphql/queries/queries";
+import { useMutation, useQuery } from "@apollo/client";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { updatePatientMutation } from "../../src/graphql/mutations/mutations";
+import { GET_PATIENT } from "../../src/graphql/queries/queries";
 
-export default function AddPatientScreen() {
+export default function EditPatientScreen() {
   const navigation = useNavigation();
+  const route = useRoute<any>();
+  const { patientId } = route.params;
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
-  const [createPatient, { loading }] = useMutation(createPatientMutation, {
-    refetchQueries: [{ query: GET_PATIENTS, variables: { search: "" } }],
-    onCompleted: () => {
-      Alert.alert("Success", "Patient created successfully");
-      navigation.goBack();
-    },
-    onError: (error) => {
-      Alert.alert("Error", error.message || "Failed to create patient");
+  const { data, loading: queryLoading, error } = useQuery(GET_PATIENT, {
+    variables: { id: patientId },
+    fetchPolicy: "network-only",
+    onCompleted: (data) => {
+      if (data?.patient) {
+        setFirstName(data.patient.firstName);
+        setLastName(data.patient.lastName);
+        setPhone(data.patient.phone);
+        setEmail(data.patient.email || "");
+      }
     },
   });
+
+  const [updatePatient, { loading: mutationLoading }] = useMutation(
+    updatePatientMutation,
+    {
+      onCompleted: () => {
+        Alert.alert("Success", "Patient updated successfully");
+        navigation.goBack();
+      },
+      onError: (error) => {
+        Alert.alert("Error", error.message || "Failed to update patient");
+      },
+    }
+  );
 
   const handleSave = () => {
     if (!firstName || !lastName || !phone) {
@@ -43,9 +61,10 @@ export default function AddPatientScreen() {
       return;
     }
 
-    createPatient({
+    updatePatient({
       variables: {
         input: {
+          id: patientId,
           firstName,
           lastName,
           phone,
@@ -54,6 +73,18 @@ export default function AddPatientScreen() {
       },
     });
   };
+
+  if (queryLoading) {
+    return <ActivityIndicator style={styles.center} size="large" />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Error loading patient data</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -66,7 +97,7 @@ export default function AddPatientScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>New Patient</Text>
+        <Text style={styles.title}>Edit Patient</Text>
 
         <View style={styles.form}>
           <Text style={styles.label}>First Name *</Text>
@@ -107,12 +138,12 @@ export default function AddPatientScreen() {
           <TouchableOpacity
             style={styles.saveButton}
             onPress={handleSave}
-            disabled={loading}
+            disabled={mutationLoading}
           >
-            {loading ? (
+            {mutationLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.saveButtonText}>Create Patient</Text>
+              <Text style={styles.saveButtonText}>Save Changes</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -126,6 +157,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollContent: {
     padding: 20,
   },
@@ -133,35 +169,38 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: 10,
+    textAlign: "center",
   },
   form: {
-    gap: 15,
+    width: "100%",
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 5,
+    marginBottom: 8,
     color: "#333",
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
+    backgroundColor: "#f5f5f5",
+    padding: 15,
     borderRadius: 8,
-    padding: 12,
+    marginBottom: 20,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
   },
   saveButton: {
     backgroundColor: "#007AFF",
-    padding: 15,
+    padding: 18,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 10,
   },
   saveButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 16,
   },
 });

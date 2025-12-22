@@ -79,6 +79,11 @@ export default function BookAppointmentScreen() {
       return;
     }
 
+    if (endTime <= startTime) {
+      Alert.alert("Error", "End time must be after start time");
+      return;
+    }
+
     const formattedStartTime = `${startTime
       .getHours()
       .toString()

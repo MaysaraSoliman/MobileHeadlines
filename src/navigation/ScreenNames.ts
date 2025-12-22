@@ -8,7 +8,12 @@ enum ScreenNames {
   EditProfileScreen = "EditProfileScreen",
   BookAppointment = "BookAppointment",
   AppointmentsList = "AppointmentsList",
+  AppointmentDetails = "AppointmentDetails",
   AddPatientScreen = "AddPatientScreen",
+  PatientsList = "PatientsList",
+  PatientDetails = "PatientDetails",
+  EditPatient = "EditPatient",
+  EditAppointment = "EditAppointment",
 }
 
 export default ScreenNames;

@@ -16,4 +16,14 @@ const AppointmentsIcon = ({ color, size }: { color: string; size: number }) => (
   <Ionicons name="calendar" size={size} color={color} />
 );
 
-export { HomeIcon, FavoritesIcon, SettingsIcon, AppointmentsIcon };
+const PatientsIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name="people" size={size} color={color} />
+);
+
+export {
+  HomeIcon,
+  FavoritesIcon,
+  SettingsIcon,
+  AppointmentsIcon,
+  PatientsIcon,
+};

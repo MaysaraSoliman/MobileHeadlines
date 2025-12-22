@@ -107,7 +107,7 @@ export default function AppointmentsListScreen() {
                 style={styles.addButton}
                 onPress={() => navigation.navigate(ScreenNames.BookAppointment)}
               >
-                <Text style={styles.addButtonText}>+ Book</Text>
+                <Ionicons name="add" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
 
@@ -138,7 +138,14 @@ export default function AppointmentsListScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+              navigation.navigate(ScreenNames.AppointmentDetails, {
+                appointmentId: item.id,
+              })
+            }
+          >
             <View style={styles.cardHeader}>
               <Text style={styles.doctorName}>
                 {item.patient.firstName} {item.patient.lastName}
@@ -154,7 +161,7 @@ export default function AppointmentsListScreen() {
               {new Date(item.date).toDateString()} at {item.startTime} -{" "}
               {item.endTime}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>
@@ -167,6 +174,8 @@ const getStatusColor = (status: string) => {
       return "green";
     case "CANCELED":
       return "red";
+    case "COMPLETED":
+      return "blue";
     default:
       return "orange";
   }
@@ -181,8 +190,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: { fontSize: 24, fontWeight: "bold" },
-  addButton: { backgroundColor: "#007AFF", padding: 10, borderRadius: 8 },
-  addButtonText: { color: "#fff", fontWeight: "bold" },
+  addButton: {
+    backgroundColor: "#007AFF",
+    padding: 10,
+    borderRadius: "50%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 20 },
   dateSelector: {
     backgroundColor: "#fff",
     padding: 15,

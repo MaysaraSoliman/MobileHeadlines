@@ -23,8 +23,16 @@ input CreateDoctorInput {
 input CreatePatientInput {
   firstName: String!
   lastName: String!
-  email: String!
+  email: String
   phone: String!
+}
+
+input UpdatePatientInput {
+  id: ID!
+  firstName: String
+  lastName: String
+  email: String
+  phone: String
 }
 
 input CreateAppointmentInput {
@@ -33,4 +41,12 @@ input CreateAppointmentInput {
   date: String!
   startTime: String!
   endTime: String!
+}
+
+input UpdateAppointmentInput {
+  id: ID!
+  date: String
+  startTime: String
+  endTime: String
+  status: String
 }

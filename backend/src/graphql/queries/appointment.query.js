@@ -60,4 +60,33 @@ const appointmentsByDate = async (parent, { date }, context) => {
   }));
 };
 
-module.exports = { appointments, appointmentsByDate };
+const appointment = async (parent, { id }, context) => {
+  const { prisma } = context;
+  const appt = await prisma.appointment.findUnique({
+    where: { id },
+    include: {
+      doctor: true,
+      patient: true,
+    },
+  });
+
+  if (!appt) {
+    throw new Error("Appointment not found");
+  }
+
+  return {
+    ...appt,
+    date: appt.date.toISOString(),
+    createdAt: appt.createdAt.toISOString(),
+    doctor: {
+      ...appt.doctor,
+      createdAt: appt.doctor.createdAt.toISOString(),
+    },
+    patient: {
+      ...appt.patient,
+      createdAt: appt.patient.createdAt.toISOString(),
+    },
+  };
+};
+
+module.exports = { appointments, appointmentsByDate, appointment };

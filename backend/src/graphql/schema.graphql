@@ -5,7 +5,9 @@ type Query {
   me: User
   doctors: [Doctor!]!
   patients(search: String): [Patient!]!
+  patient(id: ID!): Patient
   appointments: [Appointment!]!
+  appointment(id: ID!): Appointment
   appointmentsByDate(date: String!): [Appointment!]!
 }
 
@@ -15,5 +17,7 @@ type Mutation {
   updateUser(input: UpdateUserInput!): UpdatedUserResponse!
   createDoctor(input: CreateDoctorInput!): Doctor!
   createPatient(input: CreatePatientInput!): Patient!
+  updatePatient(input: UpdatePatientInput!): Patient!
   createAppointment(input: CreateAppointmentInput!): Appointment!
+  updateAppointment(input: UpdateAppointmentInput!): Appointment!
 }

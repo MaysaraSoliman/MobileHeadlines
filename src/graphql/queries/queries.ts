@@ -68,3 +68,42 @@ export const GET_APPOINTMENTS = gql`
     }
   }
 `;
+
+export const GET_PATIENT = gql`
+  query GetPatient($id: ID!) {
+    patient(id: $id) {
+      id
+      firstName
+      lastName
+      email
+      phone
+      createdAt
+    }
+  }
+`;
+
+export const GET_APPOINTMENT = gql`
+  query GetAppointment($id: ID!) {
+    appointment(id: $id) {
+      id
+      date
+      startTime
+      endTime
+      status
+      doctor {
+        id
+        name
+        specialty
+        email
+        phone
+      }
+      patient {
+        id
+        firstName
+        lastName
+        email
+        phone
+      }
+    }
+  }
+`;
