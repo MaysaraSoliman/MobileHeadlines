@@ -24,9 +24,19 @@ type Doctor {
   createdAt: String!
 }
 
+type Patient {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String!
+  createdAt: String!
+}
+
 type Appointment {
   id: ID!
   doctor: Doctor!
+  patient: Patient!
   date: String!
   startTime: String!
   endTime: String!

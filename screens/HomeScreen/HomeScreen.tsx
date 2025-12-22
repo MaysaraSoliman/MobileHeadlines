@@ -1,11 +1,10 @@
 import React from "react";
-import { StyleSheet, ActivityIndicator, View, Button } from "react-native";
+import { StyleSheet, ActivityIndicator, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Header from "../../src/components/Header/Header";
 import Hero from "../../src/components/Hero/Hero";
 import TopNews from "../../src/components/TopNews/TopNews";
 import { useAuth } from "../../src/context/AuthContext";
-import ScreenNames from "../../src/navigation/ScreenNames";
 
 export default function HomeScreen() {
   const { user, loading, refreshUser } = useAuth();

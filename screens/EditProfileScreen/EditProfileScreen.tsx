@@ -28,10 +28,12 @@ export default function EditProfileScreen() {
   }, [refreshUser]);
 
   const [updateProfile, { loading }] = useMutation(updateUserMutation, {
-    onCompleted: async () => {
-      await refreshUser();
-      Alert.alert("Success", "Profile updated successfully");
-      navigation.goBack();
+    onCompleted: () => {
+      (async () => {
+        await refreshUser();
+        Alert.alert("Success", "Profile updated successfully");
+        navigation.goBack();
+      })();
     },
     onError: (error) => {
       Alert.alert("Error", error.message || "Failed to update profile");

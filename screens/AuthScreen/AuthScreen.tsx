@@ -50,16 +50,18 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
 
   const [login, { loading }] = useMutation(LOGIN_MUTATION, {
-    onCompleted: async (data: any) => {
-      try {
-        await signIn(data.login.token);
-        reset({
-          index: 0,
-          routes: [{ name: ScreenStacks.MainTabs }],
-        });
-      } catch (error) {
-        console.error("Error signing in:", error);
-      }
+    onCompleted: (data: any) => {
+      (async () => {
+        try {
+          await signIn(data.login.token);
+          reset({
+            index: 0,
+            routes: [{ name: ScreenStacks.MainTabs }],
+          });
+        } catch (error) {
+          console.error("Error signing in:", error);
+        }
+      })();
     },
     onError: (error: any) => {
       Alert.alert("Login Failed", error.message);

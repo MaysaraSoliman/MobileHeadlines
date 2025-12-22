@@ -27,8 +27,25 @@ const createAppointmentMutation = gql`
         name
         specialty
       }
+      patient {
+        id
+        firstName
+        lastName
+      }
     }
   }
 `;
 
-export { updateUserMutation, createAppointmentMutation };
+const createPatientMutation = gql`
+  mutation CreatePatient($input: CreatePatientInput!) {
+    createPatient(input: $input) {
+      id
+      firstName
+      lastName
+      phone
+      email
+    }
+  }
+`;
+
+export { updateUserMutation, createAppointmentMutation, createPatientMutation };

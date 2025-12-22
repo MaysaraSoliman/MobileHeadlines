@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -21,7 +20,7 @@ type TopNewsNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function TopNews({
   ListHeaderComponent,
-  onRefresh: parentRefresh,
+  onRefresh,
 }: Readonly<{
   ListHeaderComponent?: React.ReactElement;
   onRefresh?: () => Promise<void>;
@@ -29,7 +28,6 @@ export default function TopNews({
   const [news, setNews] = useState<any>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const { navigate } = useNavigation<TopNewsNavigationProp>();
 
@@ -40,7 +38,7 @@ export default function TopNews({
 
     try {
       const res = await axios.get(
-        `https://newsapi.org/v2/top-headlines?country=us&page=${page}&pageSize=10&apiKey=b27d8cbb8acb4fd88f528d41ffb96802`
+        `https://newsapi.org/v2/top-headlines?country=us&page=${page}&pageSize=5&apiKey=bb57ede0b4c44de2ad14acd549d5caff`
       );
 
       setNews((prev: any) => {
@@ -59,27 +57,6 @@ export default function TopNews({
   useEffect(() => {
     fetchNews();
   }, [page]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      const res = await axios.get(
-        `https://newsapi.org/v2/top-headlines?country=us&page=1&pageSize=10&apiKey=b27d8cbb8acb4fd88f528d41ffb96802`
-      );
-
-      const newArticles = res.data.articles.filter(
-        (item: any) => item.urlToImage
-      );
-      setNews(newArticles);
-      setPage(1);
-
-      if (parentRefresh) await parentRefresh();
-    } catch (error: any) {
-      console.log("REFRESH ERROR:", error.response?.data || error.message);
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const renderNews = ({ item }: { item: any }) => {
     return (
@@ -106,9 +83,6 @@ export default function TopNews({
     <FlatList
       data={news}
       renderItem={renderNews}
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
-      keyExtractor={(item, index) => `${item.url}-${index}`}
       contentContainerStyle={styles.cardContainer}
       onEndReached={() => {
         if (!loading) setPage((p) => p + 1);
@@ -121,15 +95,6 @@ export default function TopNews({
             <Text style={styles.title}>Top News</Text>
           </View>
         </View>
-      }
-      ListFooterComponent={
-        loading ? (
-          <ActivityIndicator
-            size="small"
-            color="#0000ff"
-            style={{ margin: 20 }}
-          />
-        ) : null
       }
     />
   );

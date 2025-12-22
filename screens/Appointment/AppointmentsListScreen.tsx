@@ -140,14 +140,16 @@ export default function AppointmentsListScreen() {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.doctorName}>{item.doctor.name}</Text>
+              <Text style={styles.doctorName}>
+                {item.patient.firstName} {item.patient.lastName}
+              </Text>
               <Text
                 style={[styles.status, { color: getStatusColor(item.status) }]}
               >
                 {item.status}
               </Text>
             </View>
-            <Text style={styles.specialty}>{item.doctor.specialty}</Text>
+            <Text style={styles.specialty}>Dr. {item.doctor.name}</Text>
             <Text style={styles.time}>
               {new Date(item.date).toDateString()} at {item.startTime} -{" "}
               {item.endTime}

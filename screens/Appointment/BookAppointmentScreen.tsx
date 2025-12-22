@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  Modal,
 } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import { Picker } from "@react-native-picker/picker";
@@ -18,10 +19,15 @@ import {
 } from "../../src/graphql/queries/queries";
 import { createAppointmentMutation } from "../../src/graphql/mutations/mutations";
 import { useNavigation } from "@react-navigation/native";
+import PatientSelector from "../../src/components/PatientSelector/PatientSelector";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function BookAppointmentScreen() {
   const navigation = useNavigation<any>();
   const [doctorId, setDoctorId] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [patientModalVisible, setPatientModalVisible] = useState(false);
+
   const [date, setDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(() => {
@@ -48,6 +54,7 @@ export default function BookAppointmentScreen() {
       .then(() => setRefreshing(false))
       .catch(() => setRefreshing(false));
   }, [refetch]);
+
   const [createAppointment, { loading: creating }] = useMutation(
     createAppointmentMutation,
     {
@@ -63,6 +70,10 @@ export default function BookAppointmentScreen() {
   );
 
   const handleCreate = () => {
+    if (!selectedPatient) {
+      Alert.alert("Error", "Please select a patient");
+      return;
+    }
     if (!doctorId) {
       Alert.alert("Error", "Please select a doctor");
       return;
@@ -80,6 +91,7 @@ export default function BookAppointmentScreen() {
     createAppointment({
       variables: {
         input: {
+          patientId: selectedPatient.id,
           doctorId,
           date: date.toISOString(),
           startTime: formattedStartTime,
@@ -99,7 +111,49 @@ export default function BookAppointmentScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Text style={styles.label}>Select Doctor</Text>
+      <Modal
+        visible={patientModalVisible}
+        animationType="slide"
+        onRequestClose={() => setPatientModalVisible(false)}
+      >
+        <PatientSelector
+          onSelect={(patient) => {
+            setSelectedPatient(patient);
+            setPatientModalVisible(false);
+          }}
+          onClose={() => setPatientModalVisible(false)}
+        />
+      </Modal>
+
+      <Text style={styles.label}>Patient</Text>
+      <TouchableOpacity
+        style={styles.fullWidthBox}
+        onPress={() => setPatientModalVisible(true)}
+      >
+        {selectedPatient ? (
+          <View style={styles.selectedPatientRow}>
+            <View style={styles.avatarSmall}>
+              <Text style={styles.avatarTextSmall}>
+                {selectedPatient.firstName?.[0]}
+                {selectedPatient.lastName?.[0]}
+              </Text>
+            </View>
+            <View>
+              <Text style={styles.boxValue}>
+                {selectedPatient.firstName} {selectedPatient.lastName}
+              </Text>
+              <Text style={styles.boxSubValue}>{selectedPatient.phone}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.placeholderRow}>
+            <Text style={styles.placeholderText}>Select a Patient</Text>
+            <Ionicons name="chevron-down" size={20} color="#666" />
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <Text style={styles.label}>Doctor</Text>
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={doctorId}
@@ -116,7 +170,7 @@ export default function BookAppointmentScreen() {
         </Picker>
       </View>
 
-      <Text style={styles.label}>Select Date</Text>
+      <Text style={styles.label}>Date</Text>
       <TouchableOpacity
         style={styles.fullWidthBox}
         onPress={() => {
@@ -143,7 +197,7 @@ export default function BookAppointmentScreen() {
         </View>
       )}
 
-      <Text style={styles.label}>Select Time</Text>
+      <Text style={styles.label}>Time</Text>
       <View style={styles.dateTimeRow}>
         <TouchableOpacity
           style={styles.dateTimeBox}
@@ -207,15 +261,7 @@ export default function BookAppointmentScreen() {
             display="spinner"
             onChange={(event, selectedDate) => {
               if (selectedDate) {
-                // Ensure end time is at least 1 minute after start time to avoid logical errors
-                const minEndTime = new Date(startTime);
-                if (selectedDate <= minEndTime) {
-                  // Optional: You could still enforce a minimum 1 minute gap or just warn
-                  // For now, I'll just update it as user requested "user can make the time duration less than 30 minutes"
-                  setEndTime(selectedDate);
-                } else {
-                  setEndTime(selectedDate);
-                }
+                setEndTime(selectedDate);
               }
             }}
             style={styles.datePicker}
@@ -234,6 +280,7 @@ export default function BookAppointmentScreen() {
           <Text style={styles.buttonText}>Book Appointment</Text>
         )}
       </TouchableOpacity>
+      <View style={{ height: 50 }} />
     </ScrollView>
   );
 }
@@ -254,8 +301,39 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     backgroundColor: "#f9f9f9",
-    alignItems: "center",
     marginBottom: 10,
+    justifyContent: "center",
+  },
+  selectedPatientRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  placeholderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  avatarSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#e1f5fe",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  avatarTextSmall: {
+    color: "#0288d1",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  boxSubValue: {
+    fontSize: 12,
+    color: "#666",
   },
   dateTimeRow: {
     flexDirection: "row",
@@ -293,13 +371,6 @@ const styles = StyleSheet.create({
   datePicker: {
     height: 300,
     width: "100%",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
   },
   button: {
     backgroundColor: "#007AFF",

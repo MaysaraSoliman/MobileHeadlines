@@ -27,15 +27,29 @@ model Doctor {
   appointments Appointment[]
 }
 
+model Patient {
+  id           String        @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  phone        String
+  createdAt    DateTime      @default(now())
+  appointments Appointment[]
+}
+
 model Appointment {
   id        String            @id @default(uuid())
+  patientId String
+  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctorId  String
-  doctor    Doctor            @relation(fields: [doctorId], references: [id])
+  doctor    Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   date      DateTime
   startTime String
   endTime   String
   status    AppointmentStatus @default(PENDING)
   createdAt DateTime          @default(now())
+
+  @@index([patientId, doctorId, date])
 }
 
 enum AppointmentStatus {

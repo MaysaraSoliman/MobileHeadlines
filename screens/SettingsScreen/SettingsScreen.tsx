@@ -111,10 +111,10 @@ export default function SettingsScreen() {
         </View>
 
         {sections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
+          <View key={`section-${sectionIndex}`} style={styles.section}>
             {section.items.map((item, itemIndex) => (
               <TouchableOpacity
-                key={itemIndex}
+                key={`item-${item.label}`}
                 style={[
                   styles.row,
                   itemIndex === section.items.length - 1 && styles.lastRow,
