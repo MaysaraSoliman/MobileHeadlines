@@ -15,7 +15,6 @@ import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { gql, useMutation } from "@apollo/client";
-import { useAuth } from "../../src/context/AuthContext";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
 
@@ -48,7 +47,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
 
   const [register, { loading }] = useMutation(REGISTER_MUTATION, {
-    onCompleted: async (data: any) => {
+    onCompleted: (data: any) => {
       try {
         Alert.alert("Success", "Account created successfully!");
         reset({

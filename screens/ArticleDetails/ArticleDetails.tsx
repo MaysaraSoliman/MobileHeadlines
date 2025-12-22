@@ -1,26 +1,10 @@
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import React from "react";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function ArticleDetails({ route }: Readonly<{ route: any }>) {
-  const { goBack } = useNavigation();
   const { item } = route.params;
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#000" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-      </View>
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: item.urlToImage || undefined }}
