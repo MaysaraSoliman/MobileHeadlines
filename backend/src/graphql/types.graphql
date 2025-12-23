@@ -1,7 +1,80 @@
+enum UserRole {
+  ADMIN
+  STAFF
+  DOCTOR
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+  COMPLETED
+}
+
 type User {
   id: ID!
   email: String!
   name: String
+  role: UserRole!
+  createdAt: String!
+  updatedAt: String!
+  appointments: [Appointment!]
+}
+
+type Company {
+  id: ID!
+  name: String!
+  email: String
+  phone: String
+  createdAt: String!
+  updatedAt: String!
+  persons: [Person!]
+  deals: [Deal!]
+  appointments: [Appointment!]
+}
+
+type Person {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String
+  phone: String
+  companyId: String!
+  company: Company!
+  appointments: [Appointment!]
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Deal {
+  id: ID!
+  title: String!
+  amount: Float!
+  status: DealStatus!
+  companyId: String!
+  company: Company!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Appointment {
+  id: ID!
+  companyId: String!
+  company: Company!
+  personId: String!
+  person: Person!
+  userId: String!
+  user: User!
+  date: String!
+  startTime: String!
+  endTime: String!
+  status: AppointmentStatus!
   createdAt: String!
   updatedAt: String!
 }
@@ -13,40 +86,4 @@ type AuthPayload {
 
 type UpdatedUserResponse {
   user: User!
-}
-
-type Doctor {
-  id: ID!
-  name: String!
-  specialty: String!
-  email: String!
-  phone: String!
-  createdAt: String!
-}
-
-type Patient {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  email: String!
-  phone: String!
-  createdAt: String!
-}
-
-type Appointment {
-  id: ID!
-  doctor: Doctor!
-  patient: Patient!
-  date: String!
-  startTime: String!
-  endTime: String!
-  status: AppointmentStatus!
-  createdAt: String!
-}
-
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  CANCELED
-  COMPLETED
 }

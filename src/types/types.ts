@@ -26,11 +26,21 @@ export type AppointmentStatus =
   | "CANCELED"
   | "COMPLETED";
 
+export type UserRole = "ADMIN" | "STAFF" | "DOCTOR";
+
+export type User = {
+  id: string;
+  email: string;
+  name?: string;
+  role: UserRole;
+};
+
 export type Doctor = {
   id: string;
   name: string;
-  specialty: string;
+  specialty?: string;
   phone?: string;
+  email?: string;
 };
 
 export type Patient = {
@@ -41,12 +51,43 @@ export type Patient = {
   email?: string;
 };
 
+export type Company = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  persons?: Person[];
+  deals?: Deal[];
+  appointments?: Appointment[];
+};
+
+export type Person = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  companyId: string;
+  company?: Company;
+};
+
+export type Deal = {
+  id: string;
+  title: string;
+  amount: number;
+  status: "OPEN" | "WON" | "LOST";
+  companyId: string;
+};
+
 export type Appointment = {
   id: string;
   date: string;
   startTime: string;
   endTime: string;
   status: AppointmentStatus;
-  doctor: Doctor;
-  patient: Patient;
+  doctor?: Doctor; // Deprecated or mapped from User
+  patient?: Patient; // Deprecated or mapped from Person
+  user?: User;
+  person?: Person;
+  company?: Company;
 };

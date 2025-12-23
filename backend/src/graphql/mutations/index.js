@@ -1,16 +1,20 @@
 const authMutations = require('./auth');
-const { createDoctor } = require('./doctor.mutation');
-const { createAppointment, updateAppointment } = require('./appointment.mutation');
-const { createPatient, updatePatient } = require('./patient.mutation');
+const { createCompany, updateCompany } = require('./company.mutation');
+const { createPerson, updatePerson } = require('./person.mutation');
+const { createDeal } = require('./deal.mutation');
+const { createAppointment, updateAppointmentStatus, updateAppointment, deleteAppointment } = require('./appointment.mutation');
 
 module.exports = {
   Mutation: {
     ...authMutations,
-    createDoctor,
+    createCompany,
+    updateCompany,
+    createPerson,
+    updatePerson,
+    createDeal,
     createAppointment,
+    updateAppointmentStatus,
     updateAppointment,
-    createPatient,
-    updatePatient,
-
+    deleteAppointment,
   },
 };

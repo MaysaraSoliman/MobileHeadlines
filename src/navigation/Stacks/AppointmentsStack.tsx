@@ -21,7 +21,7 @@ export default function AppointmentsStack() {
         component={AppointmentsListScreen}
       />
       <Stack.Screen
-        name={ScreenNames.BookAppointment}
+        name={ScreenNames.BookAppointmentScreen}
         component={BookAppointmentScreen}
         options={{
           headerShown: true,

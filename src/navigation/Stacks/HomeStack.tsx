@@ -5,6 +5,9 @@ import ScreenNames from "../ScreenNames";
 import HomeScreen from "../../../screens/HomeScreen/HomeScreen";
 import ArticleDetails from "../../../screens/ArticleDetails/ArticleDetails";
 import AddPatientScreen from "../../../screens/Patient/AddPatientScreen";
+import CompaniesScreen from "../../../screens/Company/CompaniesScreen";
+import PersonsScreen from "../../../screens/Company/PersonsScreen";
+import BookAppointmentScreen from "../../../screens/Appointment/BookAppointmentScreen";
 
 const Stack = createStackNavigator();
 
@@ -51,6 +54,33 @@ export default function HomeStack() {
           headerTitleContainerStyle: {
             paddingBottom: Platform.OS === "android" ? 0 : 5,
           },
+        }}
+      />
+      <Stack.Screen
+        name={ScreenNames.CompaniesScreen}
+        component={CompaniesScreen}
+        options={{
+          headerShown: true,
+          title: "Companies",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name={ScreenNames.PersonsScreen}
+        component={PersonsScreen}
+        options={{
+          headerShown: true,
+          title: "Persons",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name={ScreenNames.BookAppointmentScreen}
+        component={BookAppointmentScreen}
+        options={{
+          headerShown: true,
+          title: "Book Appointment",
+          headerBackTitle: "Back",
         }}
       />
     </Stack.Navigator>

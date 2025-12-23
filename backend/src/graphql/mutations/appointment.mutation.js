@@ -1,150 +1,103 @@
-const createAppointment = async (parent, { input }, context) => {
-  const { doctorId, patientId, date, startTime, endTime } = input;
-  const { prisma } = context;
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
 
-  const doctor = await prisma.doctor.findUnique({
-    where: { id: doctorId },
-  });
+const formatAppointment = (appt) => {
+  if (!appt) return null;
+  return {
+    ...appt,
+    date: appt.date instanceof Date ? appt.date.toISOString() : appt.date,
+    createdAt: appt.createdAt instanceof Date ? appt.createdAt.toISOString() : appt.createdAt,
+    updatedAt: appt.updatedAt instanceof Date ? appt.updatedAt.toISOString() : appt.updatedAt,
+  };
+};
 
-  if (!doctor) {
-    throw new Error('Doctor not found');
-  }
+const createAppointment = async (_, { input }, { prisma }) => {
+  const { companyId, personId, userId, date, startTime, endTime } = input;
 
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-  });
+  // Validate Company
+  const company = await prisma.company.findUnique({ where: { id: companyId } });
+  if (!company) throw new Error('Company not found');
 
-  if (!patient) {
-    throw new Error('Patient not found');
-  }
+  // Validate Person (and check if belongs to company)
+  const person = await prisma.person.findUnique({ where: { id: personId } });
+  if (!person) throw new Error('Person not found');
+  if (person.companyId !== companyId) throw new Error('Person does not belong to this company');
 
-  // Validate Time
-  const [startH, startM] = startTime.split(':').map(Number);
-  const [endH, endM] = endTime.split(':').map(Number);
-  const startTotal = startH * 60 + startM;
-  const endTotal = endH * 60 + endM;
+  // Validate User
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('User not found');
+  // Optional: check if user is a DOCTOR if strict role enforcement is needed
+  // if (user.role !== 'DOCTOR') throw new Error('User is not a doctor');
 
-  if (startTotal >= endTotal) {
-    throw new Error('Start time must be before end time');
-  }
-
-  // Check Overlap
-  const appointmentDate = new Date(date);
-  const startOfDay = new Date(appointmentDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(appointmentDate);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  const existingAppointments = await prisma.appointment.findMany({
-    where: {
-      doctorId,
-      date: {
-        gte: startOfDay,
-        lte: endOfDay,
-      },
-      status: { not: 'CANCELED' },
-    },
-  });
-
-  const hasOverlap = existingAppointments.some((appt) => {
-    const [apptStartH, apptStartM] = appt.startTime.split(':').map(Number);
-    const [apptEndH, apptEndM] = appt.endTime.split(':').map(Number);
-    const apptStart = apptStartH * 60 + apptStartM;
-    const apptEnd = apptEndH * 60 + apptEndM;
-
-    return startTotal < apptEnd && endTotal > apptStart;
-  });
-
-  if (hasOverlap) {
-    throw new Error('Doctor is not available at this time');
-  }
-
-  const appointment = await prisma.appointment.create({
+  const appt = await prisma.appointment.create({
     data: {
-      doctorId,
-      patientId,
-      date: appointmentDate,
+      companyId,
+      personId,
+      userId,
+      date: new Date(date),
       startTime,
       endTime,
-      status: 'PENDING',
+      status: 'PENDING'
     },
     include: {
-      doctor: true,
-      patient: true,
-    },
+      company: true,
+      person: true,
+      user: true
+    }
   });
-
-  return {
-    ...appointment,
-    date: appointment.date.toISOString(),
-    createdAt: appointment.createdAt.toISOString(),
-    doctor: {
-      ...appointment.doctor,
-      createdAt: appointment.doctor.createdAt.toISOString(),
-    },
-    patient: {
-      ...appointment.patient,
-      createdAt: appointment.patient.createdAt.toISOString(),
-    },
-  };
+  return formatAppointment(appt);
 };
 
-const updateAppointment = async (parent, { input }, context) => {
-  const { id, date, startTime, endTime, status } = input;
-  const { prisma } = context;
-
-  const existingAppt = await prisma.appointment.findUnique({
+const updateAppointmentStatus = async (_, { input }, { prisma }) => {
+  const { id, status } = input;
+  const appt = await prisma.appointment.update({
     where: { id },
-  });
-
-  if (!existingAppt) {
-    throw new Error('Appointment not found');
-  }
-
-  const newStartTime = startTime || existingAppt.startTime;
-  const newEndTime = endTime || existingAppt.endTime;
-
-  // Validate Time
-  const [startH, startM] = newStartTime.split(':').map(Number);
-  const [endH, endM] = newEndTime.split(':').map(Number);
-  const startTotal = startH * 60 + startM;
-  const endTotal = endH * 60 + endM;
-
-  if (startTotal >= endTotal) {
-    throw new Error('Start time must be before end time');
-  }
-
-  const dataToUpdate = {};
-  if (status) dataToUpdate.status = status;
-  if (date) dataToUpdate.date = new Date(date);
-  if (startTime) dataToUpdate.startTime = startTime;
-  if (endTime) dataToUpdate.endTime = endTime;
-
-  // If time is changing, simple overlap check could be added here similar to create
-  // For now, simple update
-
-  const appointment = await prisma.appointment.update({
-    where: { id },
-    data: dataToUpdate,
+    data: { status },
     include: {
-      doctor: true,
-      patient: true,
-    },
+      company: true,
+      person: true,
+      user: true
+    }
   });
-
-  return {
-    ...appointment,
-    date: appointment.date.toISOString(),
-    createdAt: appointment.createdAt.toISOString(),
-    doctor: {
-      ...appointment.doctor,
-      createdAt: appointment.doctor.createdAt.toISOString(),
-    },
-    patient: {
-      ...appointment.patient,
-      createdAt: appointment.patient.createdAt.toISOString(),
-    },
-  };
+  return formatAppointment(appt);
 };
 
-module.exports = { createAppointment, updateAppointment };
+const updateAppointment = async (_, { input }, { prisma }) => {
+  const { id, date, ...rest } = input;
+  const data = { ...rest };
+  if (date) {
+    // Ensure date is treated as UTC
+    data.date = dayjs.utc(date).toDate();
+  }
+
+  const appt = await prisma.appointment.update({
+    where: { id },
+    data,
+    include: {
+      company: true,
+      person: true,
+      user: true
+    }
+  });
+  return formatAppointment(appt);
+};
+
+const deleteAppointment = async (_, { id }, { prisma }) => {
+  const appt = await prisma.appointment.delete({
+    where: { id },
+    include: {
+      company: true,
+      person: true,
+      user: true
+    }
+  });
+  return formatAppointment(appt);
+};
+
+module.exports = {
+  createAppointment,
+  updateAppointmentStatus,
+  updateAppointment,
+  deleteAppointment
+};

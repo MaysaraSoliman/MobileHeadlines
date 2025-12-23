@@ -1,23 +1,31 @@
-# import * from './types.graphql'
-# import * from './inputs.graphql'
-
 type Query {
   me: User
-  doctors: [Doctor!]!
-  patients(search: String): [Patient!]!
-  patient(id: ID!): Patient
-  appointments: [Appointment!]!
+  users(role: UserRole): [User!]!
+  companies(search: String): [Company!]!
+  company(id: ID!): Company
+  personsByCompany(companyId: ID!, search: String): [Person!]!
+  appointmentsByCompany(companyId: ID!, date: String): [Appointment!]!
+  
+  persons: [Person!]!
+  appointments(date: String): [Appointment!]!
   appointment(id: ID!): Appointment
-  appointmentsByDate(date: String!): [Appointment!]!
 }
 
 type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   updateUser(input: UpdateUserInput!): UpdatedUserResponse!
-  createDoctor(input: CreateDoctorInput!): Doctor!
-  createPatient(input: CreatePatientInput!): Patient!
-  updatePatient(input: UpdatePatientInput!): Patient!
+  
+  createCompany(input: CreateCompanyInput!): Company!
+  updateCompany(input: UpdateCompanyInput!): Company!
+  
+  createPerson(input: CreatePersonInput!): Person!
+  updatePerson(input: UpdatePersonInput!): Person!
+  
+  createDeal(input: CreateDealInput!): Deal!
+  
   createAppointment(input: CreateAppointmentInput!): Appointment!
+  updateAppointmentStatus(input: UpdateAppointmentStatusInput!): Appointment!
   updateAppointment(input: UpdateAppointmentInput!): Appointment!
+  deleteAppointment(id: ID!): Appointment!
 }

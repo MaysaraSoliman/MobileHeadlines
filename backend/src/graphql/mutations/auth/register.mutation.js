@@ -2,7 +2,7 @@ const { hashPassword } = require('../../../utils/auth');
 const { getToken } = require('../../../utils/jwt');
 
 const register = async (parent, { input }, context) => {
-  const { email, password, name } = input;
+  const { email, password, name, role } = input;
   const existingUser = await context.prisma.user.findUnique({
     where: {
       email,
@@ -17,6 +17,7 @@ const register = async (parent, { input }, context) => {
       email,
       password: hashedPassword,
       name,
+      role: role || 'STAFF',
     },
   });
 

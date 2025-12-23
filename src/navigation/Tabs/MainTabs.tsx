@@ -10,11 +10,11 @@ import {
   HomeIcon,
   SettingsIcon,
   AppointmentsIcon,
-  PatientsIcon,
+  CompaniesIcon,
 } from "../../Icons/Icons";
 import SettingsStack from "../Stacks/SettingsStack";
 import AppointmentsStack from "../Stacks/AppointmentsStack";
-import PatientsStack from "../Stacks/PatientsStack";
+import CompaniesStack from "../Stacks/CompaniesStack";
 
 export default function MainTabs() {
   const Tab = createBottomTabNavigator();
@@ -55,11 +55,11 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name={ScreenStacks.PatientsStack}
-        component={PatientsStack}
+        name={ScreenStacks.CompaniesStack}
+        component={CompaniesStack}
         options={{
-          tabBarLabel: "Patients",
-          tabBarIcon: PatientsIcon,
+          tabBarLabel: "Companies",
+          tabBarIcon: CompaniesIcon,
         }}
       />
       <Tab.Screen

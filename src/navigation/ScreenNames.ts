@@ -6,7 +6,7 @@ enum ScreenNames {
   FavoritesScreen = "FavoritesScreen",
   SettingsScreen = "SettingsScreen",
   EditProfileScreen = "EditProfileScreen",
-  BookAppointment = "BookAppointment",
+  BookAppointmentScreen = "BookAppointmentScreen",
   AppointmentsList = "AppointmentsList",
   AppointmentDetails = "AppointmentDetails",
   AddPatientScreen = "AddPatientScreen",
@@ -14,6 +14,17 @@ enum ScreenNames {
   PatientDetails = "PatientDetails",
   EditPatient = "EditPatient",
   EditAppointment = "EditAppointment",
+  CompaniesScreen = "CompaniesScreen",
+  PersonsScreen = "PersonsScreen",
+  CreatePersonScreen = "CreatePersonScreen",
+  CreateCompanyScreen = "CreateCompanyScreen",
+  CompanyDetailsScreen = "CompanyDetailsScreen",
+  CompanyProfileScreen = "CompanyProfileScreen",
+  EditCompanyScreen = "EditCompanyScreen",
+  DealsScreen = "DealsScreen",
+  CreateDealScreen = "CreateDealScreen",
+  CompanyAppointmentsScreen = "CompanyAppointmentsScreen",
+  PersonDetailsScreen = "PersonDetailsScreen",
 }
 
 export default ScreenNames;

@@ -3,53 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum UserRole {
+  ADMIN
+  STAFF
+  DOCTOR
 }
 
-model Doctor {
-  id           String        @id @default(uuid())
-  name         String
-  specialty    String
-  email        String        @unique
-  phone        String
-  createdAt    DateTime      @default(now())
-  appointments Appointment[]
-}
-
-model Patient {
-  id           String        @id @default(uuid())
-  firstName    String
-  lastName     String
-  email        String        @unique
-  phone        String
-  createdAt    DateTime      @default(now())
-  appointments Appointment[]
-}
-
-model Appointment {
-  id        String            @id @default(uuid())
-  patientId String
-  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctorId  String
-  doctor    Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  date      DateTime
-  startTime String
-  endTime   String
-  status    AppointmentStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-
-  @@index([patientId, doctorId, date])
+enum DealStatus {
+  OPEN
+  WON
+  LOST
 }
 
 enum AppointmentStatus {
@@ -57,4 +23,76 @@ enum AppointmentStatus {
   CONFIRMED
   CANCELED
   COMPLETED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String?
+  role         UserRole      @default(STAFF)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+}
+
+model Company {
+  id           String        @id @default(uuid())
+  name         String
+  email        String?
+  phone        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  persons      Person[]
+  deals        Deal[]
+  appointments Appointment[]
+}
+
+model Person {
+  id           String        @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([companyId])
+}
+
+model Deal {
+  id        String     @id @default(uuid())
+  title     String
+  amount    Float
+  status    DealStatus @default(OPEN)
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([companyId])
+}
+
+model Appointment {
+  id        String            @id @default(uuid())
+  companyId String
+  company   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  personId  String
+  person    Person            @relation(fields: [personId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  startTime String
+  endTime   String
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([companyId])
+  @@index([personId])
+  @@index([userId])
+  @@index([date])
 }

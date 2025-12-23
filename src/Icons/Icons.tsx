@@ -16,8 +16,8 @@ const AppointmentsIcon = ({ color, size }: { color: string; size: number }) => (
   <Ionicons name="calendar" size={size} color={color} />
 );
 
-const PatientsIcon = ({ color, size }: { color: string; size: number }) => (
-  <Ionicons name="people" size={size} color={color} />
+const CompaniesIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name="business" size={size} color={color} />
 );
 
 export {
@@ -25,5 +25,5 @@ export {
   FavoritesIcon,
   SettingsIcon,
   AppointmentsIcon,
-  PatientsIcon,
+  CompaniesIcon,
 };

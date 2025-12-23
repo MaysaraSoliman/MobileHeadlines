@@ -1,83 +1,138 @@
 import { gql } from "@apollo/client";
 
-export const GET_DOCTORS = gql`
-  query GetDoctors {
-    doctors {
+export const GET_ME = gql`
+  query Me {
+    me {
+      id
+      email
+      name
+      role
+    }
+  }
+`;
+
+export const GET_USERS = gql`
+  query GetUsers($role: UserRole) {
+    users(role: $role) {
       id
       name
-      specialty
+      email
+      role
+    }
+  }
+`;
+
+export const GET_COMPANIES = gql`
+  query GetCompanies($search: String) {
+    companies(search: $search) {
+      id
+      name
       email
       phone
+      persons {
+        id
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+export const GET_COMPANY = gql`
+  query GetCompany($id: ID!) {
+    company(id: $id) {
+      id
+      name
+      email
+      phone
+      persons {
+        id
+        firstName
+        lastName
+        email
+        phone
+      }
+      deals {
+        id
+        title
+        amount
+        status
+      }
+      appointments {
+        id
+      }
+    }
+  }
+`;
+
+export const GET_PERSONS_BY_COMPANY = gql`
+  query GetPersonsByCompany($companyId: ID!, $search: String) {
+    personsByCompany(companyId: $companyId, search: $search) {
+      id
+      firstName
+      lastName
+      email
+      phone
+    }
+  }
+`;
+
+export const GET_APPOINTMENTS_BY_COMPANY = gql`
+  query GetAppointmentsByCompany($companyId: ID!, $date: String) {
+    appointmentsByCompany(companyId: $companyId, date: $date) {
+      id
+      date
+      startTime
+      endTime
+      status
+      user {
+        id
+        name
+        role
+      }
+      person {
+        id
+        firstName
+        lastName
+      }
     }
   }
 `;
 
 export const GET_PATIENTS = gql`
-  query GetPatients($search: String) {
-    patients(search: $search) {
+  query GetPatients {
+    persons {
       id
       firstName
       lastName
-      email
       phone
-    }
-  }
-`;
-
-export const GET_APPOINTMENTS_BY_DATE = gql`
-  query GetAppointmentsByDate($date: String!) {
-    appointmentsByDate(date: $date) {
-      id
-      date
-      startTime
-      endTime
-      status
-      doctor {
-        id
-        name
-        specialty
-      }
-      patient {
-        id
-        firstName
-        lastName
-        phone
-      }
+      email
     }
   }
 `;
 
 export const GET_APPOINTMENTS = gql`
-  query GetAppointments {
-    appointments {
+  query GetAppointments($date: String) {
+    appointments(date: $date) {
       id
       date
       startTime
       endTime
       status
-      doctor {
+      user {
         id
         name
-        specialty
+        role
       }
-      patient {
+      person {
         id
         firstName
         lastName
       }
-    }
-  }
-`;
-
-export const GET_PATIENT = gql`
-  query GetPatient($id: ID!) {
-    patient(id: $id) {
-      id
-      firstName
-      lastName
-      email
-      phone
-      createdAt
+      company {
+        id
+        name
+      }
     }
   }
 `;
@@ -90,19 +145,22 @@ export const GET_APPOINTMENT = gql`
       startTime
       endTime
       status
-      doctor {
+      user {
         id
         name
-        specialty
+        role
         email
-        phone
       }
-      patient {
+      person {
         id
         firstName
         lastName
-        email
         phone
+        email
+      }
+      company {
+        id
+        name
       }
     }
   }

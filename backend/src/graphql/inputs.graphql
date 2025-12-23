@@ -2,6 +2,7 @@ input RegisterInput {
   email: String!
   password: String!
   name: String
+  role: UserRole
 }
 
 input LoginInput {
@@ -11,23 +12,31 @@ input LoginInput {
 
 input UpdateUserInput{
   name: String
+  role: UserRole
 }
 
-input CreateDoctorInput {
+input CreateCompanyInput {
   name: String!
-  specialty: String!
-  email: String!
-  phone: String!
+  email: String
+  phone: String
 }
 
-input CreatePatientInput {
+input UpdateCompanyInput {
+  id: ID!
+  name: String
+  email: String
+  phone: String
+}
+
+input CreatePersonInput {
+  companyId: ID!
   firstName: String!
   lastName: String!
   email: String
-  phone: String!
+  phone: String
 }
 
-input UpdatePatientInput {
+input UpdatePersonInput {
   id: ID!
   firstName: String
   lastName: String
@@ -35,18 +44,34 @@ input UpdatePatientInput {
   phone: String
 }
 
+input CreateDealInput {
+  companyId: ID!
+  title: String!
+  amount: Float!
+  status: DealStatus
+}
+
 input CreateAppointmentInput {
-  doctorId: ID!
-  patientId: ID!
+  companyId: ID!
+  personId: ID!
+  userId: ID!
   date: String!
   startTime: String!
   endTime: String!
 }
 
+input UpdateAppointmentStatusInput {
+  id: ID!
+  status: AppointmentStatus!
+}
+
 input UpdateAppointmentInput {
   id: ID!
+  companyId: ID
+  personId: ID
+  userId: ID
   date: String
   startTime: String
   endTime: String
-  status: String
+  status: AppointmentStatus
 }

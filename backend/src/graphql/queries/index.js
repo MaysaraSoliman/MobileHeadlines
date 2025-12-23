@@ -1,16 +1,16 @@
-const { me } = require('./me.query');
-const { doctors } = require('./doctor.query');
-const { appointments, appointmentsByDate, appointment } = require('./appointment.query');
-const { patients, patient } = require('./patient.query');
+const { me, users } = require('./user.query');
+const { companies, company, personsByCompany, appointmentsByCompany, persons, appointments, appointment } = require('./company.query');
 
 module.exports = {
   Query: {
     me,
-    doctors,
+    users,
+    companies,
+    company,
+    personsByCompany,
+    appointmentsByCompany,
+    persons,
     appointments,
-    appointmentsByDate,
-    appointment,
-    patients,
-    patient,
+    appointment
   },
 };

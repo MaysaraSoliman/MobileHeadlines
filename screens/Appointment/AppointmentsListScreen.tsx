@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Modal,
+  Platform,
 } from "react-native";
 import { useQuery } from "@apollo/client";
 import { GET_APPOINTMENTS } from "../../src/graphql/queries/queries";
@@ -14,13 +15,18 @@ import { useNavigation } from "@react-navigation/native";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 export default function AppointmentsListScreen() {
   const navigation = useNavigation<any>();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [tempDate, setTempDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [tempDate, setTempDate] = useState(dayjs());
   const [showCalendar, setShowCalendar] = useState(false);
   const { data, loading, refetch } = useQuery(GET_APPOINTMENTS, {
+    variables: { date: selectedDate.format("YYYY-MM-DD") },
     notifyOnNetworkStatusChange: true,
   });
   const [refreshing, setRefreshing] = useState(false);
@@ -32,27 +38,17 @@ export default function AppointmentsListScreen() {
       .catch(() => setRefreshing(false));
   }, [refetch]);
 
-  const filteredAppointments =
-    data?.appointments.filter((appt: any) => {
-      const apptDate = new Date(appt.date);
-      return (
-        apptDate.getDate() === selectedDate.getDate() &&
-        apptDate.getMonth() === selectedDate.getMonth() &&
-        apptDate.getFullYear() === selectedDate.getFullYear()
-      );
-    }) || [];
+  const appointments = data?.appointments || [];
 
   const changeDate = (days: number) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(selectedDate.getDate() + days);
-    setSelectedDate(newDate);
+    setSelectedDate(selectedDate.add(days, "day"));
   };
 
   if (loading && !data) return <ActivityIndicator style={{ flex: 1 }} />;
 
   return (
     <View style={styles.container}>
-      {showCalendar && (
+      {showCalendar && Platform.OS === "ios" && (
         <Modal
           transparent={true}
           animationType="fade"
@@ -67,19 +63,21 @@ export default function AppointmentsListScreen() {
                   <Ionicons name="close" size={24} color="#333" />
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="inline"
-                themeVariant="light"
-                textColor="black"
-                onChange={(event, date) => {
-                  if (date) {
-                    setTempDate(date);
-                  }
-                }}
-                style={styles.calendar}
-              />
+              <View>
+                <DateTimePicker
+                  value={tempDate.toDate()}
+                  mode="date"
+                  display="inline"
+                  themeVariant="light"
+                  textColor="black"
+                  onChange={(event, date) => {
+                    if (date) {
+                      setTempDate(dayjs(date));
+                    }
+                  }}
+                  style={styles.calendar}
+                />
+              </View>
               <TouchableOpacity
                 style={styles.confirmButton}
                 onPress={() => {
@@ -94,8 +92,22 @@ export default function AppointmentsListScreen() {
         </Modal>
       )}
 
+      {showCalendar && Platform.OS === "android" && (
+        <DateTimePicker
+          value={selectedDate.toDate()}
+          mode="date"
+          display="default"
+          onChange={(event, date) => {
+            setShowCalendar(false);
+            if (event.type === "set" && date) {
+              setSelectedDate(dayjs(date));
+            }
+          }}
+        />
+      )}
+
       <FlatList
-        data={filteredAppointments}
+        data={appointments}
         refreshing={refreshing}
         onRefresh={onRefresh}
         keyExtractor={(item) => item.id}
@@ -105,7 +117,9 @@ export default function AppointmentsListScreen() {
               <Text style={styles.title}>Appointments</Text>
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() => navigation.navigate(ScreenNames.BookAppointment)}
+                onPress={() =>
+                  navigation.navigate(ScreenNames.BookAppointmentScreen)
+                }
               >
                 <Ionicons name="add" size={24} color="#fff" />
               </TouchableOpacity>
@@ -122,7 +136,7 @@ export default function AppointmentsListScreen() {
                 }}
               >
                 <Text style={styles.dateText}>
-                  {selectedDate.toDateString()}
+                  {selectedDate.format("ddd MMM DD YYYY")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => changeDate(1)}>
@@ -148,7 +162,7 @@ export default function AppointmentsListScreen() {
           >
             <View style={styles.cardHeader}>
               <Text style={styles.doctorName}>
-                {item.patient.firstName} {item.patient.lastName}
+                {item.company?.name || "No Company"}
               </Text>
               <Text
                 style={[styles.status, { color: getStatusColor(item.status) }]}
@@ -156,10 +170,13 @@ export default function AppointmentsListScreen() {
                 {item.status}
               </Text>
             </View>
-            <Text style={styles.specialty}>Dr. {item.doctor.name}</Text>
+            <Text style={styles.specialty}>
+              {item.person?.firstName} {item.person?.lastName}
+            </Text>
+            <Text style={styles.subText}>{item.user?.name}</Text>
             <Text style={styles.time}>
-              {new Date(item.date).toDateString()} at {item.startTime} -{" "}
-              {item.endTime}
+              {dayjs.utc(item.date).format("ddd MMM DD YYYY")} at{" "}
+              {item.startTime} - {item.endTime}
             </Text>
           </TouchableOpacity>
         )}
@@ -182,7 +199,7 @@ const getStatusColor = (status: string) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#f4f4f4", padding: 20 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -192,49 +209,51 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "bold" },
   addButton: {
     backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: "50%",
-    display: "flex",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
-  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 20 },
   dateSelector: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 20,
   },
   dateText: { fontSize: 16, fontWeight: "bold" },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  emptyText: { marginTop: 10, color: "#888", fontSize: 16 },
   card: {
     backgroundColor: "#fff",
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 10,
-    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 5,
   },
   doctorName: { fontSize: 18, fontWeight: "bold" },
-  specialty: { color: "#666", marginBottom: 5 },
-  time: { fontSize: 14, fontWeight: "500" },
-  status: { fontWeight: "bold" },
-  emptyContainer: {
-    alignItems: "center",
-    marginTop: 50,
-  },
-  emptyText: {
-    marginTop: 10,
-    fontSize: 18,
-    color: "#999",
-    fontWeight: "bold",
-  },
+  status: { fontSize: 14, fontWeight: "bold" },
+  specialty: { fontSize: 14, color: "#666", marginBottom: 5 },
+  subText: { fontSize: 14, color: "#666", marginBottom: 5 },
+  time: { fontSize: 12, color: "#888" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -242,10 +261,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   calendarContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "white",
+    borderRadius: 20,
     padding: 20,
     width: "90%",
+    maxWidth: 400,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -256,25 +276,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
+    color: "#333",
   },
   calendar: {
     height: 350,
   },
   confirmButton: {
     backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 10,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   confirmButtonText: {
-    color: "#fff",
+    color: "white",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,60 +8,94 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
-  Modal,
+  Platform,
 } from "react-native";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import dayjs from "dayjs";
 import {
-  GET_DOCTORS,
+  GET_USERS,
   GET_APPOINTMENTS,
+  GET_COMPANIES,
+  GET_PERSONS_BY_COMPANY,
+  GET_APPOINTMENTS_BY_COMPANY,
+  GET_COMPANY,
 } from "../../src/graphql/queries/queries";
-import { createAppointmentMutation } from "../../src/graphql/mutations/mutations";
-import { useNavigation } from "@react-navigation/native";
-import PatientSelector from "../../src/components/PatientSelector/PatientSelector";
-import { Ionicons } from "@expo/vector-icons";
+import { CREATE_APPOINTMENT } from "../../src/graphql/mutations/mutations";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function BookAppointmentScreen() {
   const navigation = useNavigation<any>();
-  const [doctorId, setDoctorId] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [patientModalVisible, setPatientModalVisible] = useState(false);
+  const route = useRoute<any>(); // Add route
 
-  const [date, setDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(() => {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() + 30);
-    return d;
-  });
+  const [companyId, setCompanyId] = useState(route.params?.companyId || "");
+  const [personId, setPersonId] = useState(route.params?.personId || "");
+  const [userId, setUserId] = useState("");
+
+  const [date, setDate] = useState(dayjs());
+  const [startTime, setStartTime] = useState(dayjs());
+  const [endTime, setEndTime] = useState(dayjs().add(30, "minute"));
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // 1. Get Companies
   const {
-    data: doctorsData,
-    loading: doctorsLoading,
-    refetch,
-  } = useQuery(GET_DOCTORS, {
+    data: companiesData,
+    loading: companiesLoading,
+    refetch: refetchCompanies,
+  } = useQuery(GET_COMPANIES);
+
+  // 2. Get Persons by Company (Lazy or dependent)
+  const [getPersons, { data: personsData, loading: personsLoading }] =
+    useLazyQuery(GET_PERSONS_BY_COMPANY);
+
+  useEffect(() => {
+    if (companyId) {
+      getPersons({ variables: { companyId } });
+      if (companyId !== route.params?.companyId) {
+        setPersonId(""); // Reset person when company changes manually
+      }
+    }
+  }, [companyId]);
+
+  // 3. Get Users
+  const {
+    data: usersData,
+    loading: usersLoading,
+    refetch: refetchUsers,
+  } = useQuery(GET_USERS, {
     notifyOnNetworkStatusChange: true,
   });
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    refetch()
+    Promise.all([refetchCompanies(), refetchUsers()])
       .then(() => setRefreshing(false))
       .catch(() => setRefreshing(false));
-  }, [refetch]);
+  }, [refetchCompanies, refetchUsers]);
 
   const [createAppointment, { loading: creating }] = useMutation(
-    createAppointmentMutation,
+    CREATE_APPOINTMENT,
     {
-      refetchQueries: [{ query: GET_APPOINTMENTS }],
+      refetchQueries: [
+        { query: GET_APPOINTMENTS },
+        {
+          query: GET_APPOINTMENTS_BY_COMPANY,
+          variables: { companyId, date: date.format("YYYY-MM-DD") },
+        },
+        {
+          query: GET_COMPANY,
+          variables: { id: companyId },
+        },
+      ],
       onCompleted: () => {
-        Alert.alert("Success", "Appointment booked successfully");
-        navigation.goBack();
+        Alert.alert("Success", "Appointment booked successfully", [
+          { text: "OK", onPress: () => navigation.goBack() },
+        ]);
       },
       onError: (err) => {
         Alert.alert("Error", err.message);
@@ -70,35 +104,34 @@ export default function BookAppointmentScreen() {
   );
 
   const handleCreate = () => {
-    if (!selectedPatient) {
-      Alert.alert("Error", "Please select a patient");
+    if (!companyId) {
+      Alert.alert("Error", "Please select a company");
       return;
     }
-    if (!doctorId) {
-      Alert.alert("Error", "Please select a doctor");
+    if (!personId) {
+      Alert.alert("Error", "Please select a person from the company");
+      return;
+    }
+    if (!userId) {
+      Alert.alert("Error", "Please select a user");
       return;
     }
 
-    if (endTime <= startTime) {
+    if (endTime.isSame(startTime) || endTime.isBefore(startTime)) {
       Alert.alert("Error", "End time must be after start time");
       return;
     }
 
-    const formattedStartTime = `${startTime
-      .getHours()
-      .toString()
-      .padStart(2, "0")}:${startTime.getMinutes().toString().padStart(2, "0")}`;
-    const formattedEndTime = `${endTime
-      .getHours()
-      .toString()
-      .padStart(2, "0")}:${endTime.getMinutes().toString().padStart(2, "0")}`;
+    const formattedStartTime = startTime.format("HH:mm");
+    const formattedEndTime = endTime.format("HH:mm");
 
     createAppointment({
       variables: {
         input: {
-          patientId: selectedPatient.id,
-          doctorId,
-          date: date.toISOString(),
+          companyId,
+          personId,
+          userId,
+          date: date.format("YYYY-MM-DD"),
           startTime: formattedStartTime,
           endTime: formattedEndTime,
         },
@@ -106,7 +139,7 @@ export default function BookAppointmentScreen() {
     });
   };
 
-  if (doctorsLoading && !doctorsData)
+  if (companiesLoading || usersLoading)
     return <ActivityIndicator style={{ flex: 1 }} />;
 
   return (
@@ -116,60 +149,62 @@ export default function BookAppointmentScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Modal
-        visible={patientModalVisible}
-        animationType="slide"
-        onRequestClose={() => setPatientModalVisible(false)}
+      {/* Company Selection */}
+      <Text style={styles.label}>Company</Text>
+      <View
+        style={[
+          styles.pickerContainer,
+          route.params?.companyId && styles.disabledPicker,
+        ]}
       >
-        <PatientSelector
-          onSelect={(patient) => {
-            setSelectedPatient(patient);
-            setPatientModalVisible(false);
-          }}
-          onClose={() => setPatientModalVisible(false)}
-        />
-      </Modal>
+        <Picker
+          selectedValue={companyId}
+          enabled={!route.params?.companyId}
+          onValueChange={(itemValue) => setCompanyId(itemValue)}
+        >
+          <Picker.Item label="Select a company..." value="" />
+          {companiesData?.companies.map((comp: any) => (
+            <Picker.Item key={comp.id} label={comp.name} value={comp.id} />
+          ))}
+        </Picker>
+      </View>
 
-      <Text style={styles.label}>Patient</Text>
-      <TouchableOpacity
-        style={styles.fullWidthBox}
-        onPress={() => setPatientModalVisible(true)}
-      >
-        {selectedPatient ? (
-          <View style={styles.selectedPatientRow}>
-            <View style={styles.avatarSmall}>
-              <Text style={styles.avatarTextSmall}>
-                {selectedPatient.firstName?.[0]}
-                {selectedPatient.lastName?.[0]}
-              </Text>
-            </View>
-            <View>
-              <Text style={styles.boxValue}>
-                {selectedPatient.firstName} {selectedPatient.lastName}
-              </Text>
-              <Text style={styles.boxSubValue}>{selectedPatient.phone}</Text>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.placeholderRow}>
-            <Text style={styles.placeholderText}>Select a Patient</Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
-          </View>
-        )}
-      </TouchableOpacity>
-
-      <Text style={styles.label}>Doctor</Text>
+      {/* Person Selection (Dependent on Company) */}
+      <Text style={styles.label}>Person</Text>
       <View style={styles.pickerContainer}>
         <Picker
-          selectedValue={doctorId}
-          onValueChange={(itemValue) => setDoctorId(itemValue)}
+          selectedValue={personId}
+          enabled={!!companyId}
+          onValueChange={(itemValue) => setPersonId(itemValue)}
         >
-          <Picker.Item label="Select a doctor..." value="" />
-          {doctorsData?.doctors.map((doc: any) => (
+          <Picker.Item
+            label={companyId ? "Select a person..." : "Select a company first"}
+            value=""
+          />
+          {personsData?.personsByCompany.map((person: any) => (
             <Picker.Item
-              key={doc.id}
-              label={`${doc.name} (${doc.specialty})`}
-              value={doc.id}
+              key={person.id}
+              label={`${person.firstName} ${person.lastName}`}
+              value={person.id}
+            />
+          ))}
+        </Picker>
+      </View>
+      {personsLoading && <ActivityIndicator size="small" />}
+
+      {/* User Selection */}
+      <Text style={styles.label}>User</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={userId}
+          onValueChange={(itemValue) => setUserId(itemValue)}
+        >
+          <Picker.Item label="Select a user..." value="" />
+          {usersData?.users.map((user: any) => (
+            <Picker.Item
+              key={user.id}
+              label={user.name || user.email}
+              value={user.id}
             />
           ))}
         </Picker>
@@ -185,22 +220,33 @@ export default function BookAppointmentScreen() {
         }}
       >
         <Text style={styles.boxLabel}>Date</Text>
-        <Text style={styles.boxValue}>{date.toDateString()}</Text>
+        <Text style={styles.boxValue}>{date.format("ddd MMM DD YYYY")}</Text>
       </TouchableOpacity>
 
-      {showDatePicker && (
-        <View style={styles.pickerWrapper}>
+      {showDatePicker &&
+        (Platform.OS === "ios" ? (
+          <View style={styles.pickerWrapper}>
+            <DateTimePicker
+              value={date.toDate()}
+              mode="date"
+              display="inline"
+              onChange={(event, selectedDate) => {
+                if (selectedDate) setDate(dayjs(selectedDate));
+              }}
+              style={styles.datePicker}
+            />
+          </View>
+        ) : (
           <DateTimePicker
-            value={date}
+            value={date.toDate()}
             mode="date"
-            display="inline"
+            display="default"
             onChange={(event, selectedDate) => {
-              if (selectedDate) setDate(selectedDate);
+              setShowDatePicker(false);
+              if (selectedDate) setDate(dayjs(selectedDate));
             }}
-            style={styles.datePicker}
           />
-        </View>
-      )}
+        ))}
 
       <Text style={styles.label}>Time</Text>
       <View style={styles.dateTimeRow}>
@@ -213,12 +259,7 @@ export default function BookAppointmentScreen() {
           }}
         >
           <Text style={styles.boxLabel}>Start Time</Text>
-          <Text style={styles.boxValue}>
-            {startTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
+          <Text style={styles.boxValue}>{startTime.format("hh:mm A")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -230,49 +271,71 @@ export default function BookAppointmentScreen() {
           }}
         >
           <Text style={styles.boxLabel}>End Time</Text>
-          <Text style={styles.boxValue}>
-            {endTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
+          <Text style={styles.boxValue}>{endTime.format("hh:mm A")}</Text>
         </TouchableOpacity>
       </View>
 
-      {showStartTimePicker && (
-        <View style={styles.pickerWrapper}>
+      {showStartTimePicker &&
+        (Platform.OS === "ios" ? (
+          <View style={styles.pickerWrapper}>
+            <DateTimePicker
+              value={startTime.toDate()}
+              mode="time"
+              display="spinner"
+              onChange={(event, selectedDate) => {
+                if (selectedDate) {
+                  const newStart = dayjs(selectedDate);
+                  setStartTime(newStart);
+                  setEndTime(newStart.add(30, "minute"));
+                }
+              }}
+              style={styles.datePicker}
+            />
+          </View>
+        ) : (
           <DateTimePicker
-            value={startTime}
+            value={startTime.toDate()}
             mode="time"
-            display="spinner"
+            display="default"
             onChange={(event, selectedDate) => {
+              setShowStartTimePicker(false);
               if (selectedDate) {
-                setStartTime(selectedDate);
-                const newEndTime = new Date(selectedDate);
-                newEndTime.setMinutes(selectedDate.getMinutes() + 30);
-                setEndTime(newEndTime);
+                const newStart = dayjs(selectedDate);
+                setStartTime(newStart);
+                setEndTime(newStart.add(30, "minute"));
               }
             }}
-            style={styles.datePicker}
           />
-        </View>
-      )}
+        ))}
 
-      {showEndTimePicker && (
-        <View style={styles.pickerWrapper}>
+      {showEndTimePicker &&
+        (Platform.OS === "ios" ? (
+          <View style={styles.pickerWrapper}>
+            <DateTimePicker
+              value={endTime.toDate()}
+              mode="time"
+              display="spinner"
+              onChange={(event, selectedDate) => {
+                if (selectedDate) {
+                  setEndTime(dayjs(selectedDate));
+                }
+              }}
+              style={styles.datePicker}
+            />
+          </View>
+        ) : (
           <DateTimePicker
-            value={endTime}
+            value={endTime.toDate()}
             mode="time"
-            display="spinner"
+            display="default"
             onChange={(event, selectedDate) => {
+              setShowEndTimePicker(false);
               if (selectedDate) {
-                setEndTime(selectedDate);
+                setEndTime(dayjs(selectedDate));
               }
             }}
-            style={styles.datePicker}
           />
-        </View>
-      )}
+        ))}
 
       <TouchableOpacity
         style={styles.button}
@@ -308,37 +371,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     marginBottom: 10,
     justifyContent: "center",
-  },
-  selectedPatientRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  placeholderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: "#666",
-  },
-  avatarSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#e1f5fe",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  avatarTextSmall: {
-    color: "#0288d1",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  boxSubValue: {
-    fontSize: 12,
-    color: "#666",
   },
   dateTimeRow: {
     flexDirection: "row",
@@ -385,4 +417,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  disabledPicker: {
+    backgroundColor: "#e0e0e0",
+    opacity: 0.7,
+  },
 });

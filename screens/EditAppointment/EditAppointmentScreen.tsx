@@ -7,16 +7,25 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
-  Modal,
   Platform,
 } from "react-native";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { updateAppointmentMutation } from "../../src/graphql/mutations/mutations";
-import { GET_APPOINTMENT } from "../../src/graphql/queries/queries";
+import { UPDATE_APPOINTMENT } from "../../src/graphql/mutations/mutations";
+import {
+  GET_APPOINTMENT,
+  GET_COMPANIES,
+  GET_PERSONS_BY_COMPANY,
+  GET_USERS,
+} from "../../src/graphql/queries/queries";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import { AppointmentStatus } from "../../src/types/types";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 const STATUS_OPTIONS: AppointmentStatus[] = [
   "PENDING",
@@ -30,14 +39,30 @@ export default function EditAppointmentScreen() {
   const route = useRoute<any>();
   const { appointmentId } = route.params;
 
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(dayjs());
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [status, setStatus] = useState("");
+  const [companyId, setCompanyId] = useState("");
+  const [personId, setPersonId] = useState("");
+  const [userId, setUserId] = useState("");
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isStartTime, setIsStartTime] = useState(true);
+
+  // Queries for dropdowns
+  const { data: companiesData, loading: companiesLoading } =
+    useQuery(GET_COMPANIES);
+  const { data: usersData, loading: usersLoading } = useQuery(GET_USERS);
+  const [getPersons, { data: personsData, loading: personsLoading }] =
+    useLazyQuery(GET_PERSONS_BY_COMPANY);
+
+  useEffect(() => {
+    if (companyId) {
+      getPersons({ variables: { companyId } });
+    }
+  }, [companyId]);
 
   const {
     data,
@@ -48,16 +73,23 @@ export default function EditAppointmentScreen() {
     fetchPolicy: "network-only",
     onCompleted: (data) => {
       if (data?.appointment) {
-        setDate(new Date(data.appointment.date));
+        // Convert UTC stored date to Local date for display/editing
+        const dateStr = dayjs(data.appointment.date).utc().format("YYYY-MM-DD");
+        setDate(dayjs(dateStr));
         setStartTime(data.appointment.startTime);
         setEndTime(data.appointment.endTime);
         setStatus(data.appointment.status);
+
+        // Set new fields
+        setCompanyId(data.appointment.company?.id || "");
+        setPersonId(data.appointment.person?.id || "");
+        setUserId(data.appointment.user?.id || "");
       }
     },
   });
 
   const [updateAppointment, { loading: mutationLoading }] = useMutation(
-    updateAppointmentMutation,
+    UPDATE_APPOINTMENT,
     {
       onCompleted: () => {
         Alert.alert("Success", "Appointment updated successfully");
@@ -87,10 +119,13 @@ export default function EditAppointmentScreen() {
       variables: {
         input: {
           id: appointmentId,
-          date: date.toISOString(),
+          date: date.format("YYYY-MM-DD"),
           startTime,
           endTime,
           status,
+          companyId,
+          personId,
+          userId,
         },
       },
     });
@@ -101,18 +136,14 @@ export default function EditAppointmentScreen() {
       setShowDatePicker(false);
     }
     if (selectedDate) {
-      setDate(selectedDate);
+      setDate(dayjs(selectedDate));
     }
   };
 
   const getTimeDate = (timeString: string) => {
     if (!timeString) return new Date();
-    const d = new Date();
     const [hours, minutes] = timeString.split(":").map(Number);
-    d.setHours(hours || 0);
-    d.setMinutes(minutes || 0);
-    d.setSeconds(0);
-    return d;
+    return dayjs().set("hour", hours).set("minute", minutes).toDate();
   };
 
   const onTimeChange = (event: any, selectedDate?: Date) => {
@@ -120,22 +151,14 @@ export default function EditAppointmentScreen() {
       setShowTimePicker(false);
     }
     if (selectedDate) {
-      const timeString = selectedDate.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
+      const timeString = dayjs(selectedDate).format("HH:mm");
+
       if (isStartTime) {
         setStartTime(timeString);
 
         // Auto-set end time to 30 minutes later
-        const endDate = new Date(selectedDate);
-        endDate.setMinutes(endDate.getMinutes() + 30);
-        const endTimeString = endDate.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        });
+        const endDate = dayjs(selectedDate).add(30, "minute");
+        const endTimeString = endDate.format("HH:mm");
         setEndTime(endTimeString);
       } else {
         setEndTime(timeString);
@@ -160,17 +183,81 @@ export default function EditAppointmentScreen() {
       <Text style={styles.title}>Edit Appointment</Text>
 
       <View style={styles.section}>
+        <Text style={styles.label}>Company</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={companyId}
+            onValueChange={(itemValue) => {
+              setCompanyId(itemValue);
+              setPersonId(""); // Reset person when company changes
+            }}
+          >
+            <Picker.Item label="Select a company..." value="" />
+            {companiesData?.companies.map((comp: any) => (
+              <Picker.Item key={comp.id} label={comp.name} value={comp.id} />
+            ))}
+          </Picker>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Person</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={personId}
+            enabled={!!companyId}
+            onValueChange={(itemValue) => setPersonId(itemValue)}
+          >
+            <Picker.Item
+              label={
+                companyId ? "Select a person..." : "Select a company first"
+              }
+              value=""
+            />
+            {personsData?.personsByCompany.map((person: any) => (
+              <Picker.Item
+                key={person.id}
+                label={`${person.firstName} ${person.lastName}`}
+                value={person.id}
+              />
+            ))}
+          </Picker>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>User</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={userId}
+            onValueChange={(itemValue) => setUserId(itemValue)}
+          >
+            <Picker.Item label="Select a user..." value="" />
+            {usersData?.users.map((user: any) => (
+              <Picker.Item
+                key={user.id}
+                label={user.name || user.email}
+                value={user.id}
+              />
+            ))}
+          </Picker>
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.label}>Date</Text>
         <TouchableOpacity
           style={styles.pickerButton}
           onPress={() => setShowDatePicker(!showDatePicker)}
         >
           <Ionicons name="calendar-outline" size={24} color="#333" />
-          <Text style={styles.pickerText}>{date.toDateString()}</Text>
+          <Text style={styles.pickerText}>
+            {dayjs(date).format("ddd MMM DD YYYY")}
+          </Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
-            value={date}
+            value={date.toDate()}
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={onDateChange}
@@ -204,18 +291,12 @@ export default function EditAppointmentScreen() {
           </TouchableOpacity>
         </View>
         {showTimePicker && (
-          <View style={styles.pickerWrapper}>
-            <DateTimePicker
-              value={
-                isStartTime ? getTimeDate(startTime) : getTimeDate(endTime)
-              }
-              mode="time"
-              is24Hour={true}
-              display="spinner"
-              onChange={onTimeChange}
-              style={styles.datePicker}
-            />
-          </View>
+          <DateTimePicker
+            value={getTimeDate(isStartTime ? startTime : endTime)}
+            mode="time"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={onTimeChange}
+          />
         )}
       </View>
 
@@ -226,15 +307,15 @@ export default function EditAppointmentScreen() {
             <TouchableOpacity
               key={option}
               style={[
-                styles.statusOption,
-                status === option && styles.selectedStatus,
+                styles.statusButton,
+                status === option && styles.statusButtonActive,
               ]}
               onPress={() => setStatus(option)}
             >
               <Text
                 style={[
-                  styles.statusText,
-                  status === option && styles.selectedStatusText,
+                  styles.statusButtonText,
+                  status === option && styles.statusButtonTextActive,
                 ]}
               >
                 {option}
@@ -250,7 +331,7 @@ export default function EditAppointmentScreen() {
         disabled={mutationLoading}
       >
         {mutationLoading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color="white" />
         ) : (
           <Text style={styles.saveButtonText}>Save Changes</Text>
         )}
@@ -260,89 +341,54 @@ export default function EditAppointmentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 30,
-    textAlign: "center",
-  },
+  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 20 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  errorText: { color: "red", fontSize: 16 },
   section: {
-    marginBottom: 25,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 10,
-    color: "#333",
-  },
+  label: { fontSize: 16, fontWeight: "600", marginBottom: 10, color: "#333" },
   pickerButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    padding: 15,
+    backgroundColor: "#f0f0f0",
+    padding: 12,
     borderRadius: 8,
   },
-  pickerText: {
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  timeContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  statusContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  statusOption: {
+  pickerText: { marginLeft: 10, fontSize: 16, color: "#333" },
+  timeContainer: { flexDirection: "row", justifyContent: "space-between" },
+  statusContainer: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  statusButton: {
+    paddingHorizontal: 15,
     paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    backgroundColor: "#f0f0f0",
+    marginBottom: 5,
   },
-  selectedStatus: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
-  },
-  statusText: {
-    color: "#666",
-    fontSize: 14,
-  },
-  selectedStatusText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  statusButtonActive: { backgroundColor: "#007AFF" },
+  statusButtonText: { fontSize: 14, color: "#333" },
+  statusButtonTextActive: { color: "white", fontWeight: "bold" },
   saveButton: {
     backgroundColor: "#007AFF",
-    padding: 18,
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 10,
     alignItems: "center",
-    marginTop: 20,
     marginBottom: 40,
   },
-  saveButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 16,
-  },
-  datePicker: {
-    height: 300,
-    width: "100%",
+  saveButtonText: { color: "white", fontSize: 18, fontWeight: "bold" },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
   },
 });
