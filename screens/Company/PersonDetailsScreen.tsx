@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,13 @@ import {
   ScrollView,
   Linking,
   Alert,
-  TextInput,
   ActivityIndicator,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import { GET_PERSONS_BY_COMPANY } from "../../src/graphql/queries/queries";
-import { UPDATE_PERSON } from "../../src/graphql/mutations/mutations";
 import { RootStackParamList } from "../../src/navigation/NavigationTypes";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import { Person } from "../../src/types/types";
@@ -35,13 +33,6 @@ export default function PersonDetailsScreen() {
   const route = useRoute<PersonDetailsScreenRouteProp>();
   const { personId, personName, companyId, companyName } = route.params;
 
-  // Since we don't have a GET_PERSON query, we rely on GET_PERSONS_BY_COMPANY
-  // or pass the full person object. But passing full object is risky if it updates.
-  // For now, let's fetch persons by company and find this person.
-  // Ideally we should implement GET_PERSON query.
-  // Or we can rely on route params if we are sure they are up to date.
-  // Let's implement client-side filtering from GET_PERSONS_BY_COMPANY cache or fetch.
-
   const { data, loading, error } = useQuery<{ personsByCompany: Person[] }>(
     GET_PERSONS_BY_COMPANY,
     {
@@ -51,53 +42,26 @@ export default function PersonDetailsScreen() {
 
   const person = data?.personsByCompany.find((p) => p.id === personId);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-
-  const [updatePerson, { loading: updating }] = useMutation(UPDATE_PERSON, {
-    refetchQueries: [
-      {
-        query: GET_PERSONS_BY_COMPANY,
-        variables: { companyId },
-      },
-    ],
-    onCompleted: () => {
-      setIsEditing(false);
-      Alert.alert("Success", "Person updated successfully");
-    },
-    onError: (err) => {
-      Alert.alert("Error", err.message);
-    },
-  });
-
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: isEditing ? "Edit Person" : personName,
+      title: personName,
       headerRight: () => (
         <TouchableOpacity
           style={{ marginRight: 15 }}
           onPress={() => {
-            if (isEditing) {
-              setIsEditing(false);
-            } else if (person) {
-              setEditFirstName(person.firstName);
-              setEditLastName(person.lastName);
-              setEditEmail(person.email || "");
-              setEditPhone(person.phone || "");
-              setIsEditing(true);
+            if (person) {
+              navigation.navigate(ScreenNames.EditPersonScreen, {
+                person,
+                companyId,
+              });
             }
           }}
         >
-          <Text style={{ color: "#007AFF", fontSize: 16 }}>
-            {isEditing ? "Cancel" : "Edit"}
-          </Text>
+          <Text style={{ color: "#007AFF", fontSize: 16 }}>Edit</Text>
         </TouchableOpacity>
       ),
     });
-  }, [navigation, personName, isEditing, person]);
+  }, [navigation, personName, person, companyId]);
 
   if (loading) return <ActivityIndicator style={styles.center} />;
   if (error) return <Text style={styles.center}>Error: {error.message}</Text>;
@@ -136,75 +100,6 @@ export default function PersonDetailsScreen() {
     }
   };
 
-  const handleSave = () => {
-    if (!editFirstName.trim() || !editLastName.trim()) {
-      Alert.alert("Error", "First and Last names are required");
-      return;
-    }
-
-    updatePerson({
-      variables: {
-        input: {
-          id: personId,
-          firstName: editFirstName,
-          lastName: editLastName,
-          email: editEmail,
-          phone: editPhone,
-        },
-      },
-    });
-  };
-
-  if (isEditing) {
-    return (
-      <ScrollView style={styles.container}>
-        <View style={styles.formSection}>
-          <Text style={styles.label}>First Name</Text>
-          <TextInput
-            style={styles.input}
-            value={editFirstName}
-            onChangeText={setEditFirstName}
-          />
-
-          <Text style={styles.label}>Last Name</Text>
-          <TextInput
-            style={styles.input}
-            value={editLastName}
-            onChangeText={setEditLastName}
-          />
-
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            value={editEmail}
-            onChangeText={setEditEmail}
-            keyboardType="email-address"
-          />
-
-          <Text style={styles.label}>Phone</Text>
-          <TextInput
-            style={styles.input}
-            value={editPhone}
-            onChangeText={setEditPhone}
-            keyboardType="phone-pad"
-          />
-
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSave}
-            disabled={updating}
-          >
-            {updating ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    );
-  }
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerSection}>
@@ -218,6 +113,7 @@ export default function PersonDetailsScreen() {
           {person.firstName} {person.lastName}
         </Text>
         <Text style={styles.company}>{companyName}</Text>
+        {person.role && <Text style={styles.role}>{person.role}</Text>}
       </View>
 
       <View style={styles.actionsContainer}>
@@ -249,6 +145,12 @@ export default function PersonDetailsScreen() {
             {person.phone || "No phone provided"}
           </Text>
         </View>
+        {person.notes && (
+          <View style={styles.detailItem}>
+            <Ionicons name="document-text-outline" size={20} color="#666" />
+            <Text style={styles.detailText}>{person.notes}</Text>
+          </View>
+        )}
       </View>
 
       <TouchableOpacity
@@ -306,6 +208,12 @@ const styles = StyleSheet.create({
   company: {
     fontSize: 16,
     color: "#666",
+    marginBottom: 5,
+  },
+  role: {
+    fontSize: 14,
+    color: "#888",
+    fontStyle: "italic",
   },
   actionsContainer: {
     flexDirection: "row",
@@ -345,36 +253,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     marginLeft: 15,
-  },
-  formSection: {
-    padding: 20,
-    backgroundColor: "white",
-  },
-  label: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 5,
-    marginTop: 10,
-  },
-  input: {
-    backgroundColor: "#f9f9f9",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  saveButton: {
-    backgroundColor: "#007AFF",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 30,
-  },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
   },
   bookButton: {
     margin: 20,

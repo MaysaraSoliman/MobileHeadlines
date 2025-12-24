@@ -30,6 +30,8 @@ export const CREATE_PERSON = gql`
       lastName
       email
       phone
+      role
+      notes
     }
   }
 `;
@@ -42,6 +44,8 @@ export const UPDATE_PERSON = gql`
       lastName
       email
       phone
+      role
+      notes
     }
   }
 `;

@@ -67,12 +67,12 @@ export default function CompanyAppointmentsScreen() {
     }
   );
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      refetch();
-    });
-    return unsubscribe;
-  }, [navigation, refetch]);
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener("focus", () => {
+  //     refetch();
+  //   });
+  //   return unsubscribe;
+  // }, [navigation, refetch]);
 
   if (loading) return <ActivityIndicator style={styles.center} />;
   if (error) return <Text style={styles.center}>Error: {error.message}</Text>;

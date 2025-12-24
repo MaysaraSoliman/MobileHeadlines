@@ -9,6 +9,7 @@ import CompanyDetailsScreen from "../../../screens/Company/CompanyDetailsScreen"
 import CompanyProfileScreen from "../../../screens/Company/CompanyProfileScreen";
 import EditCompanyScreen from "../../../screens/Company/EditCompanyScreen";
 import PersonDetailsScreen from "../../../screens/Company/PersonDetailsScreen";
+import EditPersonScreen from "../../../screens/Company/EditPersonScreen";
 import DealsScreen from "../../../screens/Company/DealsScreen";
 import CreateDealScreen from "../../../screens/Company/CreateDealScreen";
 import CompanyAppointmentsScreen from "../../../screens/Company/CompanyAppointmentsScreen";
@@ -55,6 +56,11 @@ export default function CompaniesStack() {
         name={ScreenNames.PersonDetailsScreen}
         component={PersonDetailsScreen}
         options={{ title: "Person Details" }}
+      />
+      <Stack.Screen
+        name={ScreenNames.EditPersonScreen}
+        component={EditPersonScreen}
+        options={{ title: "Edit Person" }}
       />
       <Stack.Screen
         name={ScreenNames.CreatePersonScreen}

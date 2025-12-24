@@ -25,6 +25,8 @@ enum ScreenNames {
   CreateDealScreen = "CreateDealScreen",
   CompanyAppointmentsScreen = "CompanyAppointmentsScreen",
   PersonDetailsScreen = "PersonDetailsScreen",
+  // EditPersonScreen
+  EditPersonScreen = "EditPersonScreen",
 }
 
 export default ScreenNames;

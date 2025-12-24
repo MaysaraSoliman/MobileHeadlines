@@ -50,12 +50,12 @@ export default function PersonsScreen() {
     notifyOnNetworkStatusChange: true,
   });
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      refetch();
-    });
-    return unsubscribe;
-  }, [navigation, refetch]);
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener("focus", () => {
+  //     refetch();
+  //   });
+  //   return unsubscribe;
+  // }, [navigation, refetch]);
 
   useLayoutEffect(() => {
     navigation.setOptions({

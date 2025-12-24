@@ -67,6 +67,8 @@ export type Person = {
   lastName: string;
   email?: string;
   phone?: string;
+  role?: string;
+  notes?: string;
   companyId: string;
   company?: Company;
 };

@@ -46,6 +46,10 @@ export type RootStackParamList = {
     companyId: string;
     companyName: string;
   };
+  [ScreenNames.EditPersonScreen]: {
+    person: any; // Using any for Person type to avoid circular dependencies or complex imports for now, or import Person type
+    companyId: string;
+  };
 };
 
 export type NavigationProps<T extends keyof RootStackParamList> = {

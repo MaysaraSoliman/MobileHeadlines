@@ -34,6 +34,8 @@ export default function CreatePersonScreen() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("");
+  const [notes, setNotes] = useState("");
 
   const [createPerson, { loading }] = useMutation(CREATE_PERSON, {
     refetchQueries: [
@@ -69,6 +71,8 @@ export default function CreatePersonScreen() {
           lastName,
           email,
           phone,
+          role,
+          notes,
         },
       },
     });
@@ -115,6 +119,24 @@ export default function CreatePersonScreen() {
           onChangeText={setPhone}
           placeholder="Enter phone number"
           keyboardType="phone-pad"
+        />
+
+        <Text style={styles.label}>Role</Text>
+        <TextInput
+          style={styles.input}
+          value={role}
+          onChangeText={setRole}
+          placeholder="e.g. Manager, Developer"
+        />
+
+        <Text style={styles.label}>Notes</Text>
+        <TextInput
+          style={[styles.input, { height: 100, textAlignVertical: "top" }]}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Enter notes..."
+          multiline
+          numberOfLines={4}
         />
 
         <TouchableOpacity
