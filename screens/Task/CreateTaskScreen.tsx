@@ -133,19 +133,22 @@ export default function CreateTaskScreen() {
       <Text style={styles.label}>Due Date</Text>
       <TouchableOpacity
         style={styles.dateButton}
-        onPress={() => setShowDatePicker(true)}
+        onPress={() => setShowDatePicker(!showDatePicker)}
       >
         <Text style={styles.dateText}>
           {dayjs(dueDate).format("MMM DD, YYYY")}
         </Text>
       </TouchableOpacity>
       {showDatePicker && (
-        <DateTimePicker
-          value={dueDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-        />
+        <View style={styles.iosDatePickerContainer}>
+          <DateTimePicker
+            value={dueDate}
+            mode="date"
+            display={Platform.OS === "ios" ? "inline" : "default"}
+            onChange={onDateChange}
+            style={Platform.OS === "ios" ? styles.iosDatePicker : undefined}
+          />
+        </View>
       )}
 
       <TouchableOpacity
@@ -247,5 +250,17 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  iosDatePickerContainer: {
+    alignItems: "center",
+  },
+  iosDatePicker: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    marginTop: 10,
+    width: "100%",
+    flex: 1,
   },
 });

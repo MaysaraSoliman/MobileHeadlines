@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     zIndex: 10,
+    backgroundColor: "#fff",
   },
   rightContainer: {
     flexDirection: "row",

@@ -41,6 +41,8 @@ export default function CompaniesScreen() {
     GET_COMPANIES,
     {
       variables: { search: debouncedSearchQuery },
+      notifyOnNetworkStatusChange: true,
+      fetchPolicy: "cache-and-network",
     }
   );
   const navigation = useNavigation<CompaniesScreenNavigationProp>();
@@ -58,12 +60,12 @@ export default function CompaniesScreen() {
     });
   }, [navigation]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      refetch();
-    });
-    return unsubscribe;
-  }, [navigation, refetch]);
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener("focus", () => {
+  //     refetch();
+  //   });
+  //   return unsubscribe;
+  // }, [navigation, refetch]);
 
   if (loading) return <ActivityIndicator style={styles.center} />;
   if (error) return <Text style={styles.center}>Error: {error.message}</Text>;

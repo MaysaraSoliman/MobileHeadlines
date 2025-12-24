@@ -48,6 +48,7 @@ export default function PersonsScreen() {
   }>(GET_PERSONS_BY_COMPANY, {
     variables: { companyId, search: debouncedSearchQuery },
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: "cache-and-network",
   });
 
   useLayoutEffect(() => {
