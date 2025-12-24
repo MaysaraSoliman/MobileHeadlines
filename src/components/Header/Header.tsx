@@ -30,8 +30,13 @@ export default function Header({ userName }: Readonly<{ userName?: string }>) {
     setMenuVisible(false);
     // Navigate to Appointment Stack -> BookAppointment
     navigation.navigate(ScreenStacks.AppointmentsStack, {
-      screen: ScreenNames.BookAppointment,
+      screen: ScreenNames.BookAppointmentScreen,
     });
+  };
+
+  const handleNewTask = () => {
+    setMenuVisible(false);
+    navigation.navigate(ScreenNames.CreateTaskScreen);
   };
 
   return (
@@ -74,7 +79,15 @@ export default function Header({ userName }: Readonly<{ userName?: string }>) {
                   onPress={handleNewAppointment}
                 >
                   <Text style={styles.menuText}>New Appointment</Text>
-                  <Ionicons name="add" size={20} color="#4CD964" />
+                  <Ionicons name="calendar-outline" size={20} color="#007AFF" />
+                </TouchableOpacity>
+                <View style={styles.divider} />
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleNewTask}
+                >
+                  <Text style={styles.menuText}>New Task</Text>
+                  <Ionicons name="checkbox-outline" size={20} color="#FF9500" />
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>

@@ -33,7 +33,9 @@ export default function BookAppointmentScreen() {
   const [personId, setPersonId] = useState(route.params?.personId || "");
   const [userId, setUserId] = useState("");
 
-  const [date, setDate] = useState(dayjs());
+  const [date, setDate] = useState(
+    route.params?.initialDate ? dayjs(route.params.initialDate) : dayjs()
+  );
   const [startTime, setStartTime] = useState(dayjs());
   const [endTime, setEndTime] = useState(dayjs().add(30, "minute"));
 
@@ -47,7 +49,10 @@ export default function BookAppointmentScreen() {
     data: companiesData,
     loading: companiesLoading,
     refetch: refetchCompanies,
-  } = useQuery(GET_COMPANIES);
+  } = useQuery(GET_COMPANIES, {
+    variables: { search: "" },
+    fetchPolicy: "cache-and-network",
+  });
 
   // 2. Get Persons by Company (Lazy or dependent)
   const [getPersons, { data: personsData, loading: personsLoading }] =
@@ -81,6 +86,7 @@ export default function BookAppointmentScreen() {
   const [createAppointment, { loading: creating }] = useMutation(
     CREATE_APPOINTMENT,
     {
+      awaitRefetchQueries: true,
       refetchQueries: [
         { query: GET_APPOINTMENTS },
         {
@@ -362,6 +368,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
+  disabledPicker: {
+    backgroundColor: "#e0e0e0",
+    borderColor: "#b0b0b0",
+  },
   fullWidthBox: {
     width: "100%",
     borderWidth: 1,
@@ -417,8 +427,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  disabledPicker: {
-    backgroundColor: "#e0e0e0",
-    opacity: 0.7,
-  },
 });

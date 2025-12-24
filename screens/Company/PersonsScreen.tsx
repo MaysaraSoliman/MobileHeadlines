@@ -50,13 +50,6 @@ export default function PersonsScreen() {
     notifyOnNetworkStatusChange: true,
   });
 
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener("focus", () => {
-  //     refetch();
-  //   });
-  //   return unsubscribe;
-  // }, [navigation, refetch]);
-
   useLayoutEffect(() => {
     navigation.setOptions({
       title: `${companyName} - Persons`,
@@ -141,6 +134,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   title: { fontSize: 18, fontWeight: "bold" },
+  role: { fontSize: 14, color: "#666", fontStyle: "italic", marginBottom: 2 },
   button: {
     marginTop: 10,
     backgroundColor: "#007bff",

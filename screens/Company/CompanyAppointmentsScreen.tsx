@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import {
   View,
   Text,
@@ -49,6 +49,7 @@ export default function CompanyAppointmentsScreen() {
           onPress={() =>
             navigation.navigate(ScreenNames.BookAppointmentScreen, {
               companyId,
+              initialDate: selectedDate.toISOString(),
             } as any)
           }
         >
@@ -62,17 +63,10 @@ export default function CompanyAppointmentsScreen() {
     GET_APPOINTMENTS_BY_COMPANY,
     {
       variables: { companyId, date: selectedDate.format("YYYY-MM-DD") },
-      fetchPolicy: "network-only",
+      fetchPolicy: "cache-and-network",
       notifyOnNetworkStatusChange: true,
     }
   );
-
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener("focus", () => {
-  //     refetch();
-  //   });
-  //   return unsubscribe;
-  // }, [navigation, refetch]);
 
   if (loading) return <ActivityIndicator style={styles.center} />;
   if (error) return <Text style={styles.center}>Error: {error.message}</Text>;

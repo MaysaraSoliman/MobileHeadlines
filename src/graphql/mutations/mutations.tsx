@@ -128,3 +128,47 @@ export const DELETE_APPOINTMENT = gql`
     }
   }
 `;
+
+export const CREATE_TASK = gql`
+  mutation CreateTask($input: CreateTaskInput!) {
+    createTask(input: $input) {
+      id
+      title
+      description
+      status
+      priority
+      dueDate
+      assignedToId
+      assignedTo {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const UPDATE_TASK = gql`
+  mutation UpdateTask($input: UpdateTaskInput!) {
+    updateTask(input: $input) {
+      id
+      title
+      description
+      status
+      priority
+      dueDate
+      assignedToId
+      assignedTo {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const DELETE_TASK = gql`
+  mutation DeleteTask($id: ID!) {
+    deleteTask(id: $id) {
+      id
+    }
+  }
+`;

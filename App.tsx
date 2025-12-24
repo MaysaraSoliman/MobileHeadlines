@@ -18,7 +18,7 @@ const httpLink = new HttpLink({
   // Use "http://192.168.1.11:4000/graphql" for Physical Device (your current Wi-Fi IP)
   // Use "http://localhost:4000/graphql" for iOS Simulator
   // uri: "http://172.20.10.2:4000/graphql", // for Expo Go on Hotspot
-  uri: "http://192.168.1.11:4000/graphql",
+  uri: "http://192.168.1.19:4000/graphql",
   // uri: "http://172.20.10.2:4000/graphql",
 });
 

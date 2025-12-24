@@ -1,5 +1,6 @@
 const { me, users } = require('./user.query');
 const { companies, company, personsByCompany, appointmentsByCompany, persons, appointments, appointment } = require('./company.query');
+const { tasks, task } = require('./task.query');
 
 module.exports = {
   Query: {
@@ -11,6 +12,8 @@ module.exports = {
     appointmentsByCompany,
     persons,
     appointments,
-    appointment
+    appointment,
+    tasks,
+    task
   },
 };

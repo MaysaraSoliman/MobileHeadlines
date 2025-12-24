@@ -107,6 +107,57 @@ export const GET_PATIENTS = gql`
       lastName
       phone
       email
+      role
+      notes
+    }
+  }
+`;
+
+export const GET_TASKS = gql`
+  query GetTasks($filter: TaskFilterInput) {
+    tasks(filter: $filter) {
+      id
+      title
+      description
+      status
+      priority
+      dueDate
+      createdAt
+      createdById
+      createdBy {
+        id
+        name
+      }
+      assignedToId
+      assignedTo {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const GET_TASK = gql`
+  query GetTask($id: ID!) {
+    task(id: $id) {
+      id
+      title
+      description
+      status
+      priority
+      dueDate
+      createdAt
+      updatedAt
+      createdById
+      createdBy {
+        id
+        name
+      }
+      assignedToId
+      assignedTo {
+        id
+        name
+      }
     }
   }
 `;

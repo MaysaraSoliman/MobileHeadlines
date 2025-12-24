@@ -27,6 +27,8 @@ enum ScreenNames {
   PersonDetailsScreen = "PersonDetailsScreen",
   // EditPersonScreen
   EditPersonScreen = "EditPersonScreen",
+  CreateTaskScreen = "CreateTaskScreen",
+  TaskDetailsScreen = "TaskDetailsScreen",
 }
 
 export default ScreenNames;

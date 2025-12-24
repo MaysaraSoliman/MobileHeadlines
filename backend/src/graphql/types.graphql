@@ -17,6 +17,20 @@ enum AppointmentStatus {
   COMPLETED
 }
 
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  CANCELED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 type User {
   id: ID!
   email: String!
@@ -25,6 +39,8 @@ type User {
   createdAt: String!
   updatedAt: String!
   appointments: [Appointment!]
+  createdTasks: [Task!]
+  assignedTasks: [Task!]
 }
 
 type Company {
@@ -77,6 +93,21 @@ type Appointment {
   startTime: String!
   endTime: String!
   status: AppointmentStatus!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Task {
+  id: ID!
+  title: String!
+  description: String
+  status: TaskStatus!
+  priority: TaskPriority!
+  dueDate: String
+  createdById: String!
+  createdBy: User!
+  assignedToId: String
+  assignedTo: User
   createdAt: String!
   updatedAt: String!
 }

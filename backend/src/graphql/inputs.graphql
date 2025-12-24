@@ -79,3 +79,31 @@ input UpdateAppointmentInput {
   endTime: String
   status: AppointmentStatus
 }
+
+input CreateTaskInput {
+  title: String!
+  description: String
+  status: TaskStatus
+  priority: TaskPriority
+  dueDate: String
+  assignedToId: ID
+}
+
+input UpdateTaskInput {
+  id: ID!
+  title: String
+  description: String
+  status: TaskStatus
+  priority: TaskPriority
+  dueDate: String
+  assignedToId: ID
+}
+
+input TaskFilterInput {
+  status: TaskStatus
+  priority: TaskPriority
+  search: String
+  assignedToId: ID
+  createdById: ID
+  dueDate: String
+}

@@ -9,6 +9,8 @@ type Query {
   persons: [Person!]!
   appointments(date: String): [Appointment!]!
   appointment(id: ID!): Appointment
+  tasks(filter: TaskFilterInput): [Task!]!
+  task(id: ID!): Task
 }
 
 type Mutation {
@@ -28,4 +30,8 @@ type Mutation {
   updateAppointmentStatus(input: UpdateAppointmentStatusInput!): Appointment!
   updateAppointment(input: UpdateAppointmentInput!): Appointment!
   deleteAppointment(id: ID!): Appointment!
+  
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(input: UpdateTaskInput!): Task!
+  deleteTask(id: ID!): Task!
 }

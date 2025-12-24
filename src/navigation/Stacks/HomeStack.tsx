@@ -8,6 +8,8 @@ import AddPatientScreen from "../../../screens/Patient/AddPatientScreen";
 import CompaniesScreen from "../../../screens/Company/CompaniesScreen";
 import PersonsScreen from "../../../screens/Company/PersonsScreen";
 import BookAppointmentScreen from "../../../screens/Appointment/BookAppointmentScreen";
+import CreateTaskScreen from "../../../screens/Task/CreateTaskScreen";
+import TaskDetailsScreen from "../../../screens/Task/TaskDetailsScreen";
 
 const Stack = createStackNavigator();
 
@@ -80,6 +82,24 @@ export default function HomeStack() {
         options={{
           headerShown: true,
           title: "Book Appointment",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name={ScreenNames.CreateTaskScreen}
+        component={CreateTaskScreen}
+        options={{
+          headerShown: true,
+          title: "New Task",
+          headerBackTitle: "Back",
+        }}
+      />
+      <Stack.Screen
+        name={ScreenNames.TaskDetailsScreen}
+        component={TaskDetailsScreen}
+        options={{
+          headerShown: true,
+          title: "Task Details",
           headerBackTitle: "Back",
         }}
       />

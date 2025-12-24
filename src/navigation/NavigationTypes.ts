@@ -50,6 +50,8 @@ export type RootStackParamList = {
     person: any; // Using any for Person type to avoid circular dependencies or complex imports for now, or import Person type
     companyId: string;
   };
+  [ScreenNames.CreateTaskScreen]: undefined;
+  [ScreenNames.TaskDetailsScreen]: { taskId: string };
 };
 
 export type NavigationProps<T extends keyof RootStackParamList> = {
