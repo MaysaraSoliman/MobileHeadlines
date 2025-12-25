@@ -27,11 +27,7 @@ export default function TasksScreen() {
   const navigation = useNavigation<any>();
 
   // State
-  const [viewMode, setViewMode] = useState<"date" | "all">("date");
-  const [selectedDate, setSelectedDate] = useState(
-    dayjs().format("YYYY-MM-DD")
-  );
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [filterDate, setFilterDate] = useState<Date | null>(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
   const [showUserFilterModal, setShowUserFilterModal] = useState(false);
 
@@ -40,12 +36,16 @@ export default function TasksScreen() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
 
   // Queries
-  const { data: usersData } = useQuery(GET_USERS);
+  const {
+    data: usersData,
+    loading: usersLoading,
+    error: usersError,
+  } = useQuery(GET_USERS);
 
   const getFilter = () => {
     const filter: any = {};
-    if (viewMode === "date") {
-      filter.dueDate = selectedDate;
+    if (filterDate) {
+      filter.dueDate = dayjs(filterDate).format("YYYY-MM-DD");
     }
     if (selectedUserId !== "all") {
       filter.assignedToId = selectedUserId;
@@ -95,7 +95,7 @@ export default function TasksScreen() {
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch, viewMode, selectedDate, selectedUserId])
+    }, [refetch, filterDate, selectedUserId])
   );
 
   useLayoutEffect(() => {
@@ -135,8 +135,8 @@ export default function TasksScreen() {
         <Ionicons name="checkmark-done-circle-outline" size={64} color="#ccc" />
         <Text style={styles.emptyText}>No tasks found</Text>
         <Text style={styles.emptySubText}>
-          {viewMode === "date"
-            ? `No tasks for ${dayjs(selectedDate).format("MMM DD")}`
+          {filterDate
+            ? `No tasks for ${dayjs(filterDate).format("MMM DD")}`
             : "No tasks found"}
         </Text>
       </View>
@@ -145,20 +145,13 @@ export default function TasksScreen() {
 
   return (
     <View style={styles.container}>
-      <CalendarFilter
-        selectedDate={selectedDate}
-        onDateSelect={setSelectedDate}
-        isOpen={isCalendarOpen}
-        onToggle={() => setIsCalendarOpen(!isCalendarOpen)}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
+      <CalendarFilter date={filterDate} onDateChange={setFilterDate} />
 
       <FilterHint
-        viewMode={viewMode}
-        selectedDate={selectedDate}
+        date={filterDate}
         selectedUser={selectedUser}
         onClearUser={() => setSelectedUserId("all")}
+        onClearDate={() => setFilterDate(null)}
       />
 
       <UserFilterModal
@@ -167,6 +160,8 @@ export default function TasksScreen() {
         onSelectUser={setSelectedUserId}
         selectedUserId={selectedUserId}
         users={usersData?.users || []}
+        loading={usersLoading}
+        error={usersError}
       />
 
       {loading && !data ? (

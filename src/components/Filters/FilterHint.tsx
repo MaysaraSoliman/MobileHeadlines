@@ -4,19 +4,19 @@ import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 
 interface FilterHintProps {
-  viewMode: "date" | "all";
-  selectedDate: string;
+  date: Date | null;
   selectedUser: { id: string; name: string } | null;
   onClearUser: () => void;
+  onClearDate: () => void;
 }
 
 export const FilterHint: React.FC<FilterHintProps> = ({
-  viewMode,
-  selectedDate,
+  date,
   selectedUser,
   onClearUser,
+  onClearDate,
 }) => {
-  const isAllTasks = viewMode === "all" && !selectedUser;
+  const isAllTasks = !date && !selectedUser;
 
   if (isAllTasks) return null;
 
@@ -24,12 +24,13 @@ export const FilterHint: React.FC<FilterHintProps> = ({
     <View style={styles.container}>
       <Text style={styles.label}>Filtering by:</Text>
       <View style={styles.chipsContainer}>
-        {viewMode === "date" && (
+        {date && (
           <View style={styles.chip}>
             <Ionicons name="calendar-outline" size={14} color="#007AFF" />
-            <Text style={styles.chipText}>
-              {dayjs(selectedDate).format("MMM D")}
-            </Text>
+            <Text style={styles.chipText}>{dayjs(date).format("MMM D")}</Text>
+            <TouchableOpacity onPress={onClearDate} style={styles.closeButton}>
+              <Ionicons name="close-circle" size={16} color="#007AFF" />
+            </TouchableOpacity>
           </View>
         )}
 
