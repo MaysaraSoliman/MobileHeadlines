@@ -17,6 +17,10 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { AppointmentStatus } from "../../src/types/types";
+import { AppointmentItem } from "../../src/components/Appointment/AppointmentItem";
+import { StatusSelectorModal } from "../../src/components/Appointment/StatusSelectorModal";
+import { useAppointmentStatus } from "../../src/hooks/useAppointmentStatus";
 
 dayjs.extend(utc);
 
@@ -25,10 +29,21 @@ export default function AppointmentsListScreen() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [tempDate, setTempDate] = useState(dayjs());
   const [showCalendar, setShowCalendar] = useState(false);
+
+  // Status Modal State
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<{
+    id: string;
+    status: AppointmentStatus;
+  } | null>(null);
+
   const { data, loading, refetch } = useQuery(GET_APPOINTMENTS, {
     variables: { date: selectedDate.format("YYYY-MM-DD") },
     notifyOnNetworkStatusChange: true,
   });
+
+  const { updateStatus } = useAppointmentStatus();
+
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = React.useCallback(() => {
@@ -44,10 +59,22 @@ export default function AppointmentsListScreen() {
     setSelectedDate(selectedDate.add(days, "day"));
   };
 
+  const handleStatusUpdate = (newStatus: AppointmentStatus) => {
+    if (!selectedAppointment) return;
+
+    updateStatus(selectedAppointment.id, newStatus, () => {
+      // Optional: Add specific success handling here if needed
+    });
+
+    setStatusModalVisible(false);
+    setSelectedAppointment(null);
+  };
+
   if (loading && !data) return <ActivityIndicator style={{ flex: 1 }} />;
 
   return (
     <View style={styles.container}>
+      {/* Date Picker Modal (iOS) */}
       {showCalendar && Platform.OS === "ios" && (
         <Modal
           transparent={true}
@@ -92,6 +119,7 @@ export default function AppointmentsListScreen() {
         </Modal>
       )}
 
+      {/* Date Picker (Android) */}
       {showCalendar && Platform.OS === "android" && (
         <DateTimePicker
           value={selectedDate.toDate()}
@@ -105,6 +133,14 @@ export default function AppointmentsListScreen() {
           }}
         />
       )}
+
+      {/* Status Selection Modal */}
+      <StatusSelectorModal
+        visible={statusModalVisible}
+        onClose={() => setStatusModalVisible(false)}
+        onSelectStatus={handleStatusUpdate}
+        currentStatus={selectedAppointment?.status}
+      />
 
       <FlatList
         data={appointments}
@@ -152,51 +188,26 @@ export default function AppointmentsListScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
+          <AppointmentItem
+            item={item}
             onPress={() =>
               navigation.navigate(ScreenNames.AppointmentDetails, {
                 appointmentId: item.id,
               })
             }
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.doctorName}>
-                {item.company?.name || "No Company"}
-              </Text>
-              <Text
-                style={[styles.status, { color: getStatusColor(item.status) }]}
-              >
-                {item.status}
-              </Text>
-            </View>
-            <Text style={styles.specialty}>
-              {item.person?.firstName} {item.person?.lastName}
-            </Text>
-            <Text style={styles.subText}>{item.user?.name}</Text>
-            <Text style={styles.time}>
-              {dayjs.utc(item.date).format("ddd MMM DD YYYY")} at{" "}
-              {item.startTime} - {item.endTime}
-            </Text>
-          </TouchableOpacity>
+            onPressStatus={(status) => {
+              setSelectedAppointment({
+                id: item.id,
+                status,
+              });
+              setStatusModalVisible(true);
+            }}
+          />
         )}
       />
     </View>
   );
 }
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "CONFIRMED":
-      return "green";
-    case "CANCELED":
-      return "red";
-    case "COMPLETED":
-      return "blue";
-    default:
-      return "orange";
-  }
-};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f4f4f4", padding: 20 },
@@ -232,28 +243,6 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   emptyText: { marginTop: 10, color: "#888", fontSize: 16 },
-  card: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  doctorName: { fontSize: 18, fontWeight: "bold" },
-  status: { fontSize: 14, fontWeight: "bold" },
-  specialty: { fontSize: 14, color: "#666", marginBottom: 5 },
-  subText: { fontSize: 14, color: "#666", marginBottom: 5 },
-  time: { fontSize: 12, color: "#888" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",

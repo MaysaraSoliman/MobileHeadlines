@@ -19,6 +19,7 @@ import { DELETE_APPOINTMENT } from "../../src/graphql/mutations/mutations";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { getStatusColor } from "../../src/utils/appointmentUtils";
 
 dayjs.extend(utc);
 
@@ -74,19 +75,6 @@ export default function AppointmentDetailsScreen() {
         },
       ]
     );
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "CONFIRMED":
-        return "green";
-      case "CANCELED":
-        return "red";
-      case "COMPLETED":
-        return "blue";
-      default:
-        return "orange";
-    }
   };
 
   return (

@@ -21,18 +21,11 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
-import { AppointmentStatus } from "../../src/types/types";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { APPOINTMENT_STATUS_OPTIONS } from "../../src/utils/appointmentUtils";
 
 dayjs.extend(utc);
-
-const STATUS_OPTIONS: AppointmentStatus[] = [
-  "PENDING",
-  "CONFIRMED",
-  "CANCELED",
-  "COMPLETED",
-];
 
 export default function EditAppointmentScreen() {
   const navigation = useNavigation();
@@ -303,7 +296,7 @@ export default function EditAppointmentScreen() {
       <View style={styles.section}>
         <Text style={styles.label}>Status</Text>
         <View style={styles.statusContainer}>
-          {STATUS_OPTIONS.map((option) => (
+          {APPOINTMENT_STATUS_OPTIONS.map((option) => (
             <TouchableOpacity
               key={option}
               style={[

@@ -22,6 +22,11 @@ import { useAuth } from "../../src/context/AuthContext";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
 import { GET_APPOINTMENTS, GET_TASKS } from "../../src/graphql/queries/queries";
+import { AppointmentItem } from "../../src/components/Appointment/AppointmentItem";
+import { TaskItem } from "../../src/components/Task/TaskItem";
+import { StatusSelectorModal } from "../../src/components/Appointment/StatusSelectorModal";
+import { useAppointmentStatus } from "../../src/hooks/useAppointmentStatus";
+import { AppointmentStatus } from "../../src/types/types";
 
 dayjs.extend(utc);
 
@@ -36,6 +41,15 @@ export default function HomeScreen() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showOverdue, setShowOverdue] = useState(false);
 
+  // Status Modal State
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<{
+    id: string;
+    status: AppointmentStatus;
+  } | null>(null);
+
+  const { updateStatus } = useAppointmentStatus();
+
   // Appointments Query
   const {
     data: appointmentsData,
@@ -45,6 +59,7 @@ export default function HomeScreen() {
     variables: { date: selectedDate.format("YYYY-MM-DD") },
     skip: activeTab !== "Appointments",
     fetchPolicy: "cache-and-network",
+    notifyOnNetworkStatusChange: true,
   });
 
   // Tasks Query
@@ -77,29 +92,21 @@ export default function HomeScreen() {
     );
   };
 
+  const handleStatusUpdate = (newStatus: AppointmentStatus) => {
+    if (!selectedAppointment) return;
+
+    updateStatus(selectedAppointment.id, newStatus, () => {
+      // Optional: Add specific success handling here if needed
+    });
+
+    setStatusModalVisible(false);
+    setSelectedAppointment(null);
+  };
+
   const renderAppointmentItem = ({ item }: { item: any }) => {
-    // Check if item.startTime and item.endTime are simple time strings (HH:mm or HH:mm:ss)
-    // or full date strings. The backend seems to return startTime/endTime as strings like "10:30".
-    // We should just display them directly if they are time strings.
-
-    let startTimeDisplay = item.startTime;
-    let endTimeDisplay = item.endTime;
-
-    // If they are full ISO strings, format them.
-    if (dayjs(item.startTime).isValid() && item.startTime.includes("T")) {
-      startTimeDisplay = dayjs(item.startTime).format("HH:mm");
-    }
-    if (dayjs(item.endTime).isValid() && item.endTime.includes("T")) {
-      endTimeDisplay = dayjs(item.endTime).format("HH:mm");
-    }
-
-    // Fallback if null
-    startTimeDisplay = startTimeDisplay || "--:--";
-    endTimeDisplay = endTimeDisplay || "--:--";
-
     return (
-      <TouchableOpacity
-        style={styles.card}
+      <AppointmentItem
+        item={item}
         onPress={() =>
           navigation.navigate(ScreenStacks.AppointmentsStack, {
             screen: ScreenNames.AppointmentDetails,
@@ -108,95 +115,25 @@ export default function HomeScreen() {
             },
           })
         }
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.doctorName}>
-            {item.company?.name || "No Company"}
-          </Text>
-          <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
-            {item.status}
-          </Text>
-        </View>
-        <Text style={styles.specialty}>
-          {item.person?.firstName} {item.person?.lastName}
-        </Text>
-        <Text style={styles.subText}>{item.user?.name}</Text>
-        <Text style={styles.time}>
-          {dayjs.utc(item.date).format("ddd MMM DD YYYY")} at {startTimeDisplay}{" "}
-          - {endTimeDisplay}
-        </Text>
-      </TouchableOpacity>
+        onPressStatus={(status) => {
+          setSelectedAppointment({
+            id: item.id,
+            status,
+          });
+          setStatusModalVisible(true);
+        }}
+      />
     );
   };
 
   const renderTaskItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.card}
+    <TaskItem
+      item={item}
       onPress={() =>
         navigation.navigate(ScreenNames.TaskDetailsScreen, { taskId: item.id })
       }
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(item.status) },
-          ]}
-        >
-          <Text style={styles.statusText}>{item.status}</Text>
-        </View>
-      </View>
-      <Text style={styles.cardSubtitle} numberOfLines={2}>
-        {item.description}
-      </Text>
-      <View style={styles.cardFooter}>
-        <View
-          style={[
-            styles.priorityBadge,
-            { backgroundColor: getPriorityColor(item.priority) },
-          ]}
-        >
-          <Text style={styles.priorityText}>{item.priority}</Text>
-        </View>
-        <Text style={styles.assigneeText}>
-          Assigned: {item.assignedTo?.name || "Unassigned"}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    />
   );
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "CONFIRMED":
-      case "DONE":
-        return "#4caf50";
-      case "PENDING":
-        return "#ff9800";
-      case "CANCELLED":
-      case "CANCELED":
-        return "#f44336";
-      case "IN_PROGRESS":
-        return "#2196f3";
-      default:
-        return "#999";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "URGENT":
-        return "#f44336";
-      case "HIGH":
-        return "#ff5722";
-      case "MEDIUM":
-        return "#ff9800";
-      case "LOW":
-        return "#4caf50";
-      default:
-        return "#999";
-    }
-  };
 
   const loading =
     activeTab === "Appointments" ? appointmentsLoading : tasksLoading;
@@ -297,6 +234,14 @@ export default function HomeScreen() {
           }}
         />
       )}
+
+      {/* Status Selection Modal */}
+      <StatusSelectorModal
+        visible={statusModalVisible}
+        onClose={() => setStatusModalVisible(false)}
+        onSelectStatus={handleStatusUpdate}
+        currentStatus={selectedAppointment?.status}
+      />
 
       <View style={styles.tabsContainer}>
         <TouchableOpacity
@@ -436,23 +381,6 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingBottom: 80,
   },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
   doctorName: {
     fontSize: 18,
     fontWeight: "bold",
@@ -479,51 +407,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 4,
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-    paddingTop: 8,
-  },
-  priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  priorityText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  assigneeText: {
-    fontSize: 12,
-    color: "#888",
-    fontStyle: "italic",
   },
   emptyContainer: {
     alignItems: "center",

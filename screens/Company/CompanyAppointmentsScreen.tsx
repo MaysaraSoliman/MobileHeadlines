@@ -19,6 +19,10 @@ import ScreenNames from "../../src/navigation/ScreenNames";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { AppointmentItem } from "../../src/components/Appointment/AppointmentItem";
+import { StatusSelectorModal } from "../../src/components/Appointment/StatusSelectorModal";
+import { useAppointmentStatus } from "../../src/hooks/useAppointmentStatus";
+import { AppointmentStatus } from "../../src/types/types";
 
 dayjs.extend(utc);
 
@@ -39,6 +43,14 @@ export default function CompanyAppointmentsScreen() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [tempDate, setTempDate] = useState(dayjs());
   const [showCalendar, setShowCalendar] = useState(false);
+
+  // Status Update Logic
+  const [selectedAppointment, setSelectedAppointment] = useState<{
+    id: string;
+    status: AppointmentStatus;
+  } | null>(null);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const { updateStatus } = useAppointmentStatus();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -77,64 +89,27 @@ export default function CompanyAppointmentsScreen() {
     setSelectedDate(selectedDate.add(days, "day"));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "CONFIRMED":
-        return "#4CD964";
-      case "PENDING":
-        return "#FFCC00";
-      case "CANCELED":
-        return "#FF3B30";
-      case "COMPLETED":
-        return "#007AFF";
-      default:
-        return "#999";
+  const handleStatusUpdate = (newStatus: AppointmentStatus) => {
+    if (selectedAppointment) {
+      updateStatus(selectedAppointment.id, newStatus);
+      setStatusModalVisible(false);
+      setSelectedAppointment(null);
     }
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.card}
+    <AppointmentItem
+      item={item}
       onPress={() =>
         navigation.navigate(ScreenNames.AppointmentDetails, {
           appointmentId: item.id,
         })
       }
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.date}>
-          {dayjs.utc(item.date).format("ddd MMM DD YYYY")}
-        </Text>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(item.status) + "20" },
-          ]}
-        >
-          <Text
-            style={[styles.statusText, { color: getStatusColor(item.status) }]}
-          >
-            {item.status}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.row}>
-        <Ionicons name="person-outline" size={16} color="#666" />
-        <Text style={styles.personInfoText}>
-          {item.person.firstName} {item.person.lastName}
-        </Text>
-      </View>
-      <View style={styles.row}>
-        <Ionicons name="person-circle-outline" size={16} color="#666" />
-        <Text style={styles.infoText}>{item.user.name}</Text>
-      </View>
-      <View style={styles.row}>
-        <Ionicons name="time-outline" size={16} color="#666" />
-        <Text style={styles.infoText}>
-          {item.startTime} - {item.endTime}
-        </Text>
-      </View>
-    </TouchableOpacity>
+      onPressStatus={(status) => {
+        setSelectedAppointment({ id: item.id, status });
+        setStatusModalVisible(true);
+      }}
+    />
   );
 
   return (
@@ -233,6 +208,13 @@ export default function CompanyAppointmentsScreen() {
           </View>
         }
       />
+
+      <StatusSelectorModal
+        visible={statusModalVisible}
+        onClose={() => setStatusModalVisible(false)}
+        onSelectStatus={handleStatusUpdate}
+        currentStatus={selectedAppointment?.status}
+      />
     </View>
   );
 }
@@ -241,41 +223,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   listContainer: { padding: 15 },
-  card: {
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingBottom: 5,
-  },
-  date: { fontSize: 16, fontWeight: "bold", color: "#333" },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: { fontSize: 12, fontWeight: "bold" },
-  row: { flexDirection: "row", alignItems: "center", marginTop: 5 },
-  personInfoText: {
-    marginLeft: 8,
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#555",
-  },
-  infoText: { marginLeft: 8, fontSize: 14, color: "#555" },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",

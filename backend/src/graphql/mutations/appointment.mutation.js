@@ -51,16 +51,25 @@ const createAppointment = async (_, { input }, { prisma }) => {
 
 const updateAppointmentStatus = async (_, { input }, { prisma }) => {
   const { id, status } = input;
-  const appt = await prisma.appointment.update({
-    where: { id },
-    data: { status },
-    include: {
-      company: true,
-      person: true,
-      user: true
+  try {
+    const appt = await prisma.appointment.update({
+      where: { id },
+      data: { status },
+      include: {
+        company: true,
+        person: true,
+        user: true
+      }
+    });
+    return formatAppointment(appt);
+  } catch (error) {
+    console.error(`Error updating appointment status to ${status}:`, error);
+    // Enhance error message for Enum issues
+    if (error.message.includes("invalid input value for enum")) {
+      throw new Error(`Invalid status value '${status}'. Please ensure the database schema is up to date.`);
     }
-  });
-  return formatAppointment(appt);
+    throw error;
+  }
 };
 
 const updateAppointment = async (_, { input }, { prisma }) => {

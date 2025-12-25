@@ -25,6 +25,11 @@ enum AppointmentStatus {
   CONFIRMED
   CANCELED
   COMPLETED
+  OPEN
+  CHECKEDIN
+  INPROGRESS
+  NOSHOW
+  DELAYED
 }
 
 enum TaskStatus {

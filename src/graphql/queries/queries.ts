@@ -95,6 +95,10 @@ export const GET_APPOINTMENTS_BY_COMPANY = gql`
         firstName
         lastName
       }
+      company {
+        id
+        name
+      }
     }
   }
 `;

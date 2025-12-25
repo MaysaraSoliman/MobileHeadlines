@@ -24,7 +24,12 @@ export type AppointmentStatus =
   | "PENDING"
   | "CONFIRMED"
   | "CANCELED"
-  | "COMPLETED";
+  | "COMPLETED"
+  | "OPEN"
+  | "CHECKEDIN"
+  | "INPROGRESS"
+  | "NOSHOW"
+  | "DELAYED";
 
 export type UserRole = "ADMIN" | "STAFF" | "DOCTOR";
 
