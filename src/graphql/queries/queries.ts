@@ -127,6 +127,7 @@ export const GET_TASKS = gql`
       priority
       dueDate
       createdAt
+      updatedAt
       createdById
       createdBy {
         id

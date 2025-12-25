@@ -17,6 +17,13 @@ export const TASK_STATUS_COLORS: Record<string, string> = {
   IN_PROGRESS: "#2196f3",
 };
 
+export const TASK_STATUS_OPTIONS = [
+  "PENDING",
+  "IN_PROGRESS",
+  "DONE",
+  "CANCELED",
+];
+
 /**
  * Returns the color associated with a task status.
  */

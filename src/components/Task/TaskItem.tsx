@@ -2,6 +2,8 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { getPriorityColor, getTaskStatusColor } from "../../utils/taskUtils";
 
+import dayjs from "dayjs";
+
 interface TaskItemProps {
   item: any;
   onPress: () => void;
@@ -11,7 +13,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({ item, onPress }) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
+        <View style={{ flex: 1, marginRight: 10 }}>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.dateText}>
+            Due:{" "}
+            {item.dueDate
+              ? dayjs(item.dueDate).format("MMM DD, YYYY")
+              : "No Date"}
+          </Text>
+        </View>
         <View
           style={[
             styles.statusBadge,
@@ -34,7 +46,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ item, onPress }) => {
           <Text style={styles.priorityText}>{item.priority}</Text>
         </View>
         <Text style={styles.assigneeText}>
-          Assigned: {item.assignedTo?.name || "Unassigned"}
+          {item.assignedTo?.name || "Unassigned"}
         </Text>
       </View>
     </TouchableOpacity>
@@ -64,6 +76,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 12,
+    color: "#666",
   },
   statusBadge: {
     paddingHorizontal: 8,

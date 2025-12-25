@@ -7,7 +7,6 @@ export type RootStackParamList = {
   [ScreenNames.RegisterScreen]: undefined;
   [ScreenNames.HomeScreen]: undefined;
   [ScreenNames.ArticleDetails]: { article: any }; // Using any for article for now or import NewsArticle
-  [ScreenNames.FavoritesScreen]: undefined;
   [ScreenNames.SettingsScreen]: undefined;
   [ScreenNames.EditProfileScreen]: undefined;
   [ScreenNames.BookAppointmentScreen]: {
@@ -52,6 +51,7 @@ export type RootStackParamList = {
   };
   [ScreenNames.CreateTaskScreen]: undefined;
   [ScreenNames.TaskDetailsScreen]: { taskId: string };
+  [ScreenNames.TasksScreen]: undefined;
 };
 
 export type NavigationProps<T extends keyof RootStackParamList> = {

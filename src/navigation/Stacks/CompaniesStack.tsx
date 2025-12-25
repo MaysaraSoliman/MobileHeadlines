@@ -16,6 +16,7 @@ import CompanyAppointmentsScreen from "../../../screens/Company/CompanyAppointme
 import BookAppointmentScreen from "../../../screens/Appointment/BookAppointmentScreen";
 import AppointmentDetailsScreen from "../../../screens/Appointment/AppointmentDetailsScreen";
 import EditAppointmentScreen from "../../../screens/EditAppointment/EditAppointmentScreen";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
 
 const Stack = createNativeStackNavigator();
 
@@ -24,9 +25,14 @@ export default function CompaniesStack() {
     <Stack.Navigator>
       <Stack.Screen
         name={ScreenNames.CompaniesScreen}
-        component={CompaniesScreen}
         options={{ title: "Companies" }}
-      />
+      >
+        {() => (
+          <ErrorBoundary name="CompaniesScreen">
+            <CompaniesScreen />
+          </ErrorBoundary>
+        )}
+      </Stack.Screen>
       <Stack.Screen
         name={ScreenNames.CreateCompanyScreen}
         component={CreateCompanyScreen}

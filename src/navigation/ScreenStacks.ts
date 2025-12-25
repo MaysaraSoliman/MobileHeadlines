@@ -5,6 +5,7 @@ enum ScreenStacks {
   SettingsStack = "SettingsStack",
   AppointmentsStack = "AppointmentsStack",
   CompaniesStack = "CompaniesStack",
+  TasksStack = "TasksStack",
 }
 
 export default ScreenStacks;

@@ -9,9 +9,10 @@ import {
   RefreshControl,
   Modal,
   Platform,
+  Alert,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,8 +23,10 @@ import { useAuth } from "../../src/context/AuthContext";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
 import { GET_APPOINTMENTS, GET_TASKS } from "../../src/graphql/queries/queries";
+import { UPDATE_TASK } from "../../src/graphql/mutations/mutations";
 import { AppointmentItem } from "../../src/components/Appointment/AppointmentItem";
-import { TaskItem } from "../../src/components/Task/TaskItem";
+import { TaskCard } from "../../src/components/Task/TaskCard";
+import { TaskStatusModal } from "../../src/components/Task/TaskStatusModal";
 import { StatusSelectorModal } from "../../src/components/Appointment/StatusSelectorModal";
 import { useAppointmentStatus } from "../../src/hooks/useAppointmentStatus";
 import { AppointmentStatus } from "../../src/types/types";
@@ -47,6 +50,10 @@ export default function HomeScreen() {
     id: string;
     status: AppointmentStatus;
   } | null>(null);
+
+  // Task Status Modal State
+  const [taskStatusModalVisible, setTaskStatusModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const { updateStatus } = useAppointmentStatus();
 
@@ -79,6 +86,8 @@ export default function HomeScreen() {
     fetchPolicy: "cache-and-network",
   });
 
+  const [updateTask] = useMutation(UPDATE_TASK);
+
   useFocusEffect(
     useCallback(() => {
       if (activeTab === "Appointments") refetchAppointments();
@@ -101,6 +110,32 @@ export default function HomeScreen() {
 
     setStatusModalVisible(false);
     setSelectedAppointment(null);
+  };
+
+  const handleTaskStatusUpdate = async (newStatus: string) => {
+    if (!selectedTask) return;
+
+    try {
+      await updateTask({
+        variables: {
+          input: {
+            id: selectedTask.id,
+            status: newStatus,
+          },
+        },
+        optimisticResponse: {
+          updateTask: {
+            ...selectedTask,
+            status: newStatus,
+            __typename: "Task",
+          },
+        },
+      });
+      setTaskStatusModalVisible(false);
+      setSelectedTask(null);
+    } catch (e: any) {
+      Alert.alert("Error", "Failed to update task status: " + e.message);
+    }
   };
 
   const renderAppointmentItem = ({ item }: { item: any }) => {
@@ -127,11 +162,15 @@ export default function HomeScreen() {
   };
 
   const renderTaskItem = ({ item }: { item: any }) => (
-    <TaskItem
-      item={item}
+    <TaskCard
+      task={item}
       onPress={() =>
         navigation.navigate(ScreenNames.TaskDetailsScreen, { taskId: item.id })
       }
+      onStatusChange={() => {
+        setSelectedTask(item);
+        setTaskStatusModalVisible(true);
+      }}
     />
   );
 
@@ -241,6 +280,17 @@ export default function HomeScreen() {
         onClose={() => setStatusModalVisible(false)}
         onSelectStatus={handleStatusUpdate}
         currentStatus={selectedAppointment?.status}
+      />
+
+      {/* Task Status Modal */}
+      <TaskStatusModal
+        visible={taskStatusModalVisible}
+        onClose={() => {
+          setTaskStatusModalVisible(false);
+          setSelectedTask(null);
+        }}
+        onSelectStatus={handleTaskStatusUpdate}
+        currentStatus={selectedTask?.status}
       />
 
       <View style={styles.tabsContainer}>

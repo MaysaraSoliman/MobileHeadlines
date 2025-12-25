@@ -1,20 +1,19 @@
 import { StyleSheet } from "react-native";
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import FavoritesScreen from "../../../screens/FavoritesScreen/FavoritesScreen";
-import ScreenNames from "../ScreenNames";
 import ScreenStacks from "../ScreenStacks";
 import HomeStack from "../Stacks/HomeStack";
 import {
-  FavoritesIcon,
   HomeIcon,
   SettingsIcon,
   AppointmentsIcon,
   CompaniesIcon,
+  TasksIcon,
 } from "../../Icons/Icons";
 import SettingsStack from "../Stacks/SettingsStack";
 import AppointmentsStack from "../Stacks/AppointmentsStack";
 import CompaniesStack from "../Stacks/CompaniesStack";
+import TasksStack from "../Stacks/TasksStack";
 
 export default function MainTabs() {
   const Tab = createBottomTabNavigator();
@@ -39,11 +38,11 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name={ScreenNames.FavoritesScreen}
-        component={FavoritesScreen}
+        name={ScreenStacks.TasksStack}
+        component={TasksStack}
         options={{
-          tabBarLabel: "Favorites",
-          tabBarIcon: FavoritesIcon,
+          tabBarLabel: "Tasks",
+          tabBarIcon: TasksIcon,
         }}
       />
       <Tab.Screen

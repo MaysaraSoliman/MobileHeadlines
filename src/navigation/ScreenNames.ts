@@ -3,7 +3,6 @@ enum ScreenNames {
   RegisterScreen = "RegisterScreen",
   HomeScreen = "HomeScreen",
   ArticleDetails = "ArticleDetails",
-  FavoritesScreen = "FavoritesScreen",
   SettingsScreen = "SettingsScreen",
   EditProfileScreen = "EditProfileScreen",
   BookAppointmentScreen = "BookAppointmentScreen",
@@ -29,6 +28,7 @@ enum ScreenNames {
   EditPersonScreen = "EditPersonScreen",
   CreateTaskScreen = "CreateTaskScreen",
   TaskDetailsScreen = "TaskDetailsScreen",
+  TasksScreen = "TasksScreen",
 }
 
 export default ScreenNames;

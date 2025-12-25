@@ -98,3 +98,22 @@ export type Appointment = {
   person?: Person;
   company?: Company;
 };
+
+export type TaskStatus = "PENDING" | "IN_PROGRESS" | "DONE" | "CANCELED";
+
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export type Task = {
+  id: string;
+  title: string;
+  description?: string;
+  status: string; // Should be TaskStatus but sometimes comes as string from GQL
+  priority: string; // Should be TaskPriority
+  dueDate?: string;
+  createdById: string;
+  createdBy?: User;
+  assignedToId?: string;
+  assignedTo?: User;
+  createdAt: string;
+  updatedAt: string;
+};
