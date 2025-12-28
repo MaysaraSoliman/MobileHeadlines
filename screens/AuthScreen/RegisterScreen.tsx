@@ -14,7 +14,8 @@ import {
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { gql, useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
 

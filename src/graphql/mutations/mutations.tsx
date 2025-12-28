@@ -172,3 +172,9 @@ export const DELETE_TASK = gql`
     }
   }
 `;
+
+export const SAVE_EXPO_PUSH_TOKEN = gql`
+  mutation SaveExpoPushToken($token: String!) {
+    saveExpoPushToken(token: $token)
+  }
+`;

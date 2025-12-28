@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { useMutation, useQuery, useLazyQuery } from "@apollo/client";
+import { useMutation, useQuery, useLazyQuery } from "@apollo/client/react";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { UPDATE_APPOINTMENT } from "../../src/graphql/mutations/mutations";
 import {
@@ -46,10 +46,10 @@ export default function EditAppointmentScreen() {
 
   // Queries for dropdowns
   const { data: companiesData, loading: companiesLoading } =
-    useQuery(GET_COMPANIES);
-  const { data: usersData, loading: usersLoading } = useQuery(GET_USERS);
+    useQuery<any>(GET_COMPANIES);
+  const { data: usersData, loading: usersLoading } = useQuery<any>(GET_USERS);
   const [getPersons, { data: personsData, loading: personsLoading }] =
-    useLazyQuery(GET_PERSONS_BY_COMPANY);
+    useLazyQuery<any>(GET_PERSONS_BY_COMPANY);
 
   useEffect(() => {
     if (companyId) {
@@ -61,27 +61,28 @@ export default function EditAppointmentScreen() {
     data,
     loading: queryLoading,
     error,
-  } = useQuery(GET_APPOINTMENT, {
+  } = useQuery<any>(GET_APPOINTMENT, {
     variables: { id: appointmentId },
     fetchPolicy: "network-only",
-    onCompleted: (data) => {
-      if (data?.appointment) {
-        // Convert UTC stored date to Local date for display/editing
-        const dateStr = dayjs(data.appointment.date).utc().format("YYYY-MM-DD");
-        setDate(dayjs(dateStr));
-        setStartTime(data.appointment.startTime);
-        setEndTime(data.appointment.endTime);
-        setStatus(data.appointment.status);
-
-        // Set new fields
-        setCompanyId(data.appointment.company?.id || "");
-        setPersonId(data.appointment.person?.id || "");
-        setUserId(data.appointment.user?.id || "");
-      }
-    },
   });
 
-  const [updateAppointment, { loading: mutationLoading }] = useMutation(
+  useEffect(() => {
+    if (data?.appointment) {
+      // Convert UTC stored date to Local date for display/editing
+      const dateStr = dayjs(data.appointment.date).utc().format("YYYY-MM-DD");
+      setDate(dayjs(dateStr));
+      setStartTime(data.appointment.startTime);
+      setEndTime(data.appointment.endTime);
+      setStatus(data.appointment.status);
+
+      // Set new fields
+      setCompanyId(data.appointment.company?.id || "");
+      setPersonId(data.appointment.person?.id || "");
+      setUserId(data.appointment.user?.id || "");
+    }
+  }, [data]);
+
+  const [updateAppointment, { loading: mutationLoading }] = useMutation<any>(
     UPDATE_APPOINTMENT,
     {
       onCompleted: () => {

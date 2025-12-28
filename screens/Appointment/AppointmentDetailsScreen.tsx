@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -28,7 +28,7 @@ export default function AppointmentDetailsScreen() {
   const navigation = useNavigation<any>();
   const { appointmentId } = route.params;
 
-  const [deleteAppointment, { loading: deleting }] = useMutation(
+  const [deleteAppointment, { loading: deleting }] = useMutation<any>(
     DELETE_APPOINTMENT,
     {
       refetchQueries: [{ query: GET_APPOINTMENTS }],
@@ -42,7 +42,7 @@ export default function AppointmentDetailsScreen() {
     }
   );
 
-  const { data, loading, error } = useQuery(GET_APPOINTMENT, {
+  const { data, loading, error } = useQuery<any>(GET_APPOINTMENT, {
     variables: { id: appointmentId },
   });
 

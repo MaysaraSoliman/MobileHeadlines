@@ -34,4 +34,5 @@ type Mutation {
   createTask(input: CreateTaskInput!): Task!
   updateTask(input: UpdateTaskInput!): Task!
   deleteTask(id: ID!): Task!
+  saveExpoPushToken(token: String!): Boolean
 }

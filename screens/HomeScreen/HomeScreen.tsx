@@ -12,7 +12,7 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Ionicons } from "@expo/vector-icons";
@@ -62,7 +62,7 @@ export default function HomeScreen() {
     data: appointmentsData,
     loading: appointmentsLoading,
     refetch: refetchAppointments,
-  } = useQuery(GET_APPOINTMENTS, {
+  } = useQuery<any>(GET_APPOINTMENTS, {
     variables: { date: selectedDate.format("YYYY-MM-DD") },
     skip: activeTab !== "Appointments",
     fetchPolicy: "cache-and-network",
@@ -74,19 +74,17 @@ export default function HomeScreen() {
     data: tasksData,
     loading: tasksLoading,
     refetch: refetchTasks,
-  } = useQuery(GET_TASKS, {
+  } = useQuery<any>(GET_TASKS, {
     variables: {
       filter: {
         dueDate: selectedDate.format("YYYY-MM-DD"),
-        // If showing overdue, we might want to adjust the filter, but typically overdue is a separate list or indicator.
-        // For now let's just fetch for the date.
       },
     },
     skip: activeTab !== "Tasks",
     fetchPolicy: "cache-and-network",
   });
 
-  const [updateTask] = useMutation(UPDATE_TASK);
+  const [updateTask] = useMutation<any>(UPDATE_TASK);
 
   useFocusEffect(
     useCallback(() => {

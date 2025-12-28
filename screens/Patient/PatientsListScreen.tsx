@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { GET_PATIENTS } from "../../src/graphql/queries/queries";
@@ -18,10 +18,13 @@ import ScreenNames from "../../src/navigation/ScreenNames";
 export default function PatientsListScreen() {
   const navigation = useNavigation<any>();
   const [search, setSearch] = useState("");
-  const { data, loading, refetch, networkStatus } = useQuery(GET_PATIENTS, {
-    variables: { search },
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, loading, refetch, networkStatus } = useQuery<any>(
+    GET_PATIENTS,
+    {
+      variables: { search },
+      notifyOnNetworkStatusChange: true,
+    }
+  );
 
   const onRefresh = useCallback(() => {
     refetch();
@@ -54,7 +57,12 @@ export default function PatientsListScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+        <Ionicons
+          name="search"
+          size={20}
+          color="#666"
+          style={styles.searchIcon}
+        />
         <TextInput
           style={styles.searchInput}
           placeholder="Search patients..."
@@ -77,7 +85,10 @@ export default function PatientsListScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           refreshControl={
-            <RefreshControl refreshing={networkStatus === 4} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={networkStatus === 4}
+              onRefresh={onRefresh}
+            />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -88,7 +99,7 @@ export default function PatientsListScreen() {
           contentContainerStyle={styles.listContent}
         />
       )}
-      
+
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate(ScreenNames.AddPatientScreen)}

@@ -6,7 +6,8 @@ import React, {
   useMemo,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { gql, useQuery, useApolloClient } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useApolloClient, useLazyQuery } from "@apollo/client/react";
 
 const ME_QUERY = gql`
   query Me {
@@ -49,17 +50,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [initializing, setInitializing] = useState(true);
   const client = useApolloClient();
 
-  // We use skip: true initially because we might not have a token yet
-  // We will manually refetch when we know we have a token
-  const {
-    data,
-    loading: queryLoading,
-    refetch,
-    error,
-  } = useQuery(ME_QUERY, {
-    skip: true, // Don't run immediately, we'll handle it
-    fetchPolicy: "network-only",
-  });
+  const [fetchMe, { data, loading: queryLoading }] = useLazyQuery<{ me: User }>(
+    ME_QUERY,
+    {
+      fetchPolicy: "network-only",
+    }
+  );
 
   useEffect(() => {
     const loadUser = async () => {
@@ -67,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const token = await AsyncStorage.getItem("token");
         if (token) {
           // If token exists, try to fetch user
-          const result = await refetch();
+          const result = await fetchMe();
           if (result.data?.me) {
             setUser(result.data.me);
           }
@@ -88,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await AsyncStorage.setItem("token", token);
       // Reset store to clear any old data and ensure fresh headers are used
       await client.resetStore();
-      const result = await refetch();
+      const result = await fetchMe();
       if (result.data?.me) {
         setUser(result.data.me);
       }
@@ -112,7 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUser = async () => {
     try {
-      const result = await refetch();
+      const result = await fetchMe();
       if (result.data?.me) {
         setUser(result.data.me);
       }

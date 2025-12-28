@@ -11,7 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { updatePatientMutation } from "../../src/graphql/mutations/mutations";
 import { GET_PATIENT } from "../../src/graphql/queries/queries";
@@ -26,20 +26,25 @@ export default function EditPatientScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
-  const { data, loading: queryLoading, error } = useQuery(GET_PATIENT, {
+  const {
+    data,
+    loading: queryLoading,
+    error,
+  } = useQuery<any>(GET_PATIENT, {
     variables: { id: patientId },
     fetchPolicy: "network-only",
-    onCompleted: (data) => {
-      if (data?.patient) {
-        setFirstName(data.patient.firstName);
-        setLastName(data.patient.lastName);
-        setPhone(data.patient.phone);
-        setEmail(data.patient.email || "");
-      }
-    },
   });
 
-  const [updatePatient, { loading: mutationLoading }] = useMutation(
+  useEffect(() => {
+    if (data?.patient) {
+      setFirstName(data.patient.firstName);
+      setLastName(data.patient.lastName);
+      setPhone(data.patient.phone);
+      setEmail(data.patient.email || "");
+    }
+  }, [data]);
+
+  const [updatePatient, { loading: mutationLoading }] = useMutation<any>(
     updatePatientMutation,
     {
       onCompleted: () => {

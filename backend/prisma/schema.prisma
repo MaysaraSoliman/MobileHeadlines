@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
@@ -57,6 +57,7 @@ model User {
   appointments  Appointment[]
   createdTasks  Task[]        @relation("CreatedTasks")
   assignedTasks Task[]        @relation("AssignedTasks")
+  expoPushToken String?
 }
 
 model Company {

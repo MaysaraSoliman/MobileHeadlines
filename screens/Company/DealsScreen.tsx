@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { GET_COMPANY } from "../../src/graphql/queries/queries";
@@ -48,7 +48,7 @@ export default function DealsScreen() {
     });
   }, [navigation, companyId, companyName]);
 
-  const { data, loading, error, refetch } = useQuery(GET_COMPANY, {
+  const { data, loading, error, refetch } = useQuery<any>(GET_COMPANY, {
     variables: { id: companyId },
   });
 

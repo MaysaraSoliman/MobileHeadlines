@@ -1,10 +1,10 @@
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { Alert } from "react-native";
 import { UPDATE_APPOINTMENT_STATUS } from "../graphql/mutations/mutations";
 import { AppointmentStatus } from "../types/types";
 
 export const useAppointmentStatus = () => {
-  const [updateAppointmentStatus, { loading, error }] = useMutation(
+  const [updateAppointmentStatus, { loading, error }] = useMutation<any>(
     UPDATE_APPOINTMENT_STATUS
   );
 

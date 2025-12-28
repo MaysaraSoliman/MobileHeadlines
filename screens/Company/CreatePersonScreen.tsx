@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { CREATE_PERSON } from "../../src/graphql/mutations/mutations";
 import {

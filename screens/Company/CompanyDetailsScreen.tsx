@@ -11,7 +11,7 @@ import {
   Linking,
   Alert,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_COMPANY } from "../../src/graphql/queries/queries";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -38,7 +38,7 @@ export default function CompanyDetailsScreen() {
   const { companyId, companyName } = route.params;
   const [menuVisible, setMenuVisible] = useState(false);
 
-  const { data } = useQuery(GET_COMPANY, {
+  const { data } = useQuery<any>(GET_COMPANY, {
     variables: { id: companyId },
   });
 

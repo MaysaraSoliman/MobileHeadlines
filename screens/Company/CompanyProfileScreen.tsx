@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_COMPANY } from "../../src/graphql/queries/queries";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -30,7 +30,7 @@ export default function CompanyProfileScreen() {
   const navigation = useNavigation<CompanyProfileScreenNavigationProp>();
   const { companyId } = route.params;
 
-  const { data, loading, error } = useQuery(GET_COMPANY, {
+  const { data, loading, error } = useQuery<any>(GET_COMPANY, {
     variables: { id: companyId },
   });
 

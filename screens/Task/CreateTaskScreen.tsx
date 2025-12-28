@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -18,8 +18,11 @@ import { CREATE_TASK } from "../../src/graphql/mutations/mutations";
 import { GET_USERS, GET_TASKS } from "../../src/graphql/queries/queries";
 import dayjs from "dayjs";
 
+// import { usePushNotifications } from "../../src/hooks/usePushNotifications";
+
 export default function CreateTaskScreen() {
   const navigation = useNavigation<any>();
+  // const { scheduleLocalNotification } = usePushNotifications();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("MEDIUM");
@@ -27,11 +30,15 @@ export default function CreateTaskScreen() {
   const [dueDate, setDueDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const { data: usersData, loading: usersLoading } = useQuery(GET_USERS);
+  const { data: usersData, loading: usersLoading } = useQuery<any>(GET_USERS);
 
-  const [createTask, { loading: creating }] = useMutation(CREATE_TASK, {
+  const [createTask, { loading: creating }] = useMutation<any>(CREATE_TASK, {
     refetchQueries: [{ query: GET_TASKS }],
-    onCompleted: () => {
+    onCompleted: async () => {
+      // await scheduleLocalNotification(
+      //   "Task Created",
+      //   `Task "${title}" has been created successfully.`
+      // );
       Alert.alert("Success", "Task created successfully", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);

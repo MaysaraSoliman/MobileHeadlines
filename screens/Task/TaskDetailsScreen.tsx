@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_TASK, GET_TASKS } from "../../src/graphql/queries/queries";
 import {
   DELETE_TASK,
@@ -30,16 +30,16 @@ export default function TaskDetailsScreen() {
   const route = useRoute<TaskDetailsScreenRouteProp>();
   const { taskId } = route.params;
 
-  const { data, loading, error } = useQuery(GET_TASK, {
+  const { data, loading, error } = useQuery<any>(GET_TASK, {
     variables: { id: taskId },
     fetchPolicy: "cache-and-network",
   });
 
-  const [updateTask] = useMutation(UPDATE_TASK, {
+  const [updateTask] = useMutation<any>(UPDATE_TASK, {
     refetchQueries: [{ query: GET_TASKS }],
   });
 
-  const [deleteTask] = useMutation(DELETE_TASK, {
+  const [deleteTask] = useMutation<any>(DELETE_TASK, {
     refetchQueries: [{ query: GET_TASKS }],
     onCompleted: () => {
       navigation.goBack();

@@ -9,7 +9,7 @@ import {
   Modal,
   Platform,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_APPOINTMENTS } from "../../src/graphql/queries/queries";
 import { useNavigation } from "@react-navigation/native";
 import ScreenNames from "../../src/navigation/ScreenNames";
@@ -37,7 +37,7 @@ export default function AppointmentsListScreen() {
     status: AppointmentStatus;
   } | null>(null);
 
-  const { data, loading, refetch } = useQuery(GET_APPOINTMENTS, {
+  const { data, loading, refetch } = useQuery<any>(GET_APPOINTMENTS, {
     variables: { date: selectedDate.format("YYYY-MM-DD") },
     notifyOnNetworkStatusChange: true,
   });

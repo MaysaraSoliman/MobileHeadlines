@@ -12,7 +12,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_PERSONS_BY_COMPANY } from "../../src/graphql/queries/queries";
 import { RootStackParamList } from "../../src/navigation/NavigationTypes";
 import ScreenNames from "../../src/navigation/ScreenNames";

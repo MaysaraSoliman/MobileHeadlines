@@ -6,10 +6,9 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Linking,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { GET_PATIENT } from "../../src/graphql/queries/queries";
@@ -21,7 +20,7 @@ export default function PatientDetailsScreen() {
   const navigation = useNavigation<any>();
   const { patientId } = route.params;
 
-  const { data, loading, error } = useQuery(GET_PATIENT, {
+  const { data, loading, error } = useQuery<any>(GET_PATIENT, {
     variables: { id: patientId },
   });
 

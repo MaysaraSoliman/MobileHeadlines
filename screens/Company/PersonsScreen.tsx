@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   TextInput,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_PERSONS_BY_COMPANY } from "../../src/graphql/queries/queries";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";

@@ -8,7 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_PATIENTS } from "../../graphql/queries/queries";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -39,7 +39,7 @@ export default function PatientSelector({
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data, loading, error } = useQuery(GET_PATIENTS, {
+  const { data, loading, error } = useQuery<any>(GET_PATIENTS, {
     variables: { search: debouncedSearch },
     fetchPolicy: "network-only",
   });

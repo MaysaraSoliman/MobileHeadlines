@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { GET_APPOINTMENTS_BY_COMPANY } from "../../src/graphql/queries/queries";
@@ -71,7 +71,7 @@ export default function CompanyAppointmentsScreen() {
     });
   }, [navigation, companyId]);
 
-  const { data, loading, error, refetch } = useQuery(
+  const { data, loading, error, refetch } = useQuery<any>(
     GET_APPOINTMENTS_BY_COMPANY,
     {
       variables: { companyId, date: selectedDate.format("YYYY-MM-DD") },

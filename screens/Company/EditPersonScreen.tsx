@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { UPDATE_PERSON } from "../../src/graphql/mutations/mutations";
 import {
   GET_PERSONS_BY_COMPANY,

@@ -11,7 +11,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { useNavigation } from "@react-navigation/native";
 import { createPatientMutation } from "../../src/graphql/mutations/mutations";
 import { GET_PATIENTS } from "../../src/graphql/queries/queries";

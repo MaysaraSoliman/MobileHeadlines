@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { UPDATE_COMPANY } from "../../src/graphql/mutations/mutations";
 import { GET_COMPANY } from "../../src/graphql/queries/queries";
@@ -31,18 +31,19 @@ export default function EditCompanyScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  const { data, loading: queryLoading } = useQuery(GET_COMPANY, {
+  const { data, loading: queryLoading } = useQuery<any>(GET_COMPANY, {
     variables: { id: companyId },
-    onCompleted: (data) => {
-      if (data?.company) {
-        setName(data.company.name);
-        setEmail(data.company.email || "");
-        setPhone(data.company.phone || "");
-      }
-    },
   });
 
-  const [updateCompany, { loading: mutationLoading }] = useMutation(
+  useEffect(() => {
+    if (data?.company) {
+      setName(data.company.name || "");
+      setEmail(data.company.email || "");
+      setPhone(data.company.phone || "");
+    }
+  }, [data]);
+
+  const [updateCompany, { loading: mutationLoading }] = useMutation<any>(
     UPDATE_COMPANY,
     {
       refetchQueries: [{ query: GET_COMPANY, variables: { id: companyId } }],

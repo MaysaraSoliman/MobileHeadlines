@@ -10,7 +10,7 @@ import {
   RefreshControl,
   Platform,
 } from "react-native";
-import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client/react";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import dayjs from "dayjs";
@@ -49,14 +49,14 @@ export default function BookAppointmentScreen() {
     data: companiesData,
     loading: companiesLoading,
     refetch: refetchCompanies,
-  } = useQuery(GET_COMPANIES, {
+  } = useQuery<any>(GET_COMPANIES, {
     variables: { search: "" },
     fetchPolicy: "cache-and-network",
   });
 
   // 2. Get Persons by Company (Lazy or dependent)
   const [getPersons, { data: personsData, loading: personsLoading }] =
-    useLazyQuery(GET_PERSONS_BY_COMPANY);
+    useLazyQuery<any>(GET_PERSONS_BY_COMPANY);
 
   useEffect(() => {
     if (companyId) {
@@ -72,7 +72,7 @@ export default function BookAppointmentScreen() {
     data: usersData,
     loading: usersLoading,
     refetch: refetchUsers,
-  } = useQuery(GET_USERS, {
+  } = useQuery<any>(GET_USERS, {
     notifyOnNetworkStatusChange: true,
   });
 

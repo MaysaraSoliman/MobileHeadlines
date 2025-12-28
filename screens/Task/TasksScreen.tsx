@@ -9,7 +9,7 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
@@ -40,7 +40,7 @@ export default function TasksScreen() {
     data: usersData,
     loading: usersLoading,
     error: usersError,
-  } = useQuery(GET_USERS);
+  } = useQuery<any>(GET_USERS);
 
   const getFilter = () => {
     const filter: any = {};
@@ -53,12 +53,12 @@ export default function TasksScreen() {
     return filter;
   };
 
-  const { data, loading, error, refetch } = useQuery(GET_TASKS, {
+  const { data, loading, error, refetch } = useQuery<any>(GET_TASKS, {
     variables: { filter: getFilter() },
     fetchPolicy: "cache-and-network",
   });
 
-  const [updateTask] = useMutation(UPDATE_TASK);
+  const [updateTask] = useMutation<any>(UPDATE_TASK);
 
   // Derived State
   const selectedUser = useMemo(() => {

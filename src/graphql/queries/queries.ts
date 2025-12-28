@@ -117,6 +117,20 @@ export const GET_PATIENTS = gql`
   }
 `;
 
+export const GET_PATIENT = gql`
+  query GetPatient($id: ID!) {
+    patient(id: $id) {
+      id
+      firstName
+      lastName
+      phone
+      email
+      role
+      notes
+    }
+  }
+`;
+
 export const GET_TASKS = gql`
   query GetTasks($filter: TaskFilterInput) {
     tasks(filter: $filter) {

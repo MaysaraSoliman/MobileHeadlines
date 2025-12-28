@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import { useNavigation } from "@react-navigation/native";
 import { CREATE_COMPANY } from "../../src/graphql/mutations/mutations";
 import { GET_COMPANIES } from "../../src/graphql/queries/queries";

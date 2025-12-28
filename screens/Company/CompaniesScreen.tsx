@@ -9,7 +9,7 @@ import {
   TextInput,
   Platform,
 } from "react-native";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_COMPANIES } from "../../src/graphql/queries/queries";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
