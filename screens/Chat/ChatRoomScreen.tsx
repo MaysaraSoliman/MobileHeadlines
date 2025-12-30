@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/context/AuthContext";
+import { useChat } from "../../src/context/ChatContext";
 
 const GET_CHAT_MESSAGES = gql`
   query ChatMessages($chatId: ID!) {
@@ -62,11 +64,32 @@ export default function ChatRoomScreen() {
   const navigation = useNavigation();
   const { chatId, name } = route.params;
   const { user } = useAuth(); // Assuming useAuth provides the current user
+  const { markAsRead, setCurrentChatId } = useChat();
   const [messageText, setMessageText] = useState("");
+  const flatListRef = useRef<FlatList>(null);
 
+  // Auto-scroll to bottom (top of inverted list) when keyboard opens
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    });
+    return () => {
+      showSubscription.remove();
+    };
+  }, []);
+
+  // Set current chat ID for unread count logic
+  // When we are in this screen, unread count for this chat should remain 0
+  // and new messages should be marked as read immediately
   useEffect(() => {
     navigation.setOptions({ title: name || "Chat" });
-  }, [name, navigation]);
+    setCurrentChatId(chatId);
+    markAsRead(chatId);
+
+    return () => {
+      setCurrentChatId(null);
+    };
+  }, [name, navigation, chatId]);
 
   const { data, loading, error, subscribeToMore } = useQuery(
     GET_CHAT_MESSAGES,
@@ -189,10 +212,11 @@ export default function ChatRoomScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 60}
+      behavior={"padding"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 100}
     >
       <FlatList
+        ref={flatListRef}
         data={data?.chatMessages || []}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}

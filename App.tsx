@@ -15,6 +15,7 @@ LogBox.ignoreLogs([
   "cache.diff", // Ignore Apollo Client deprecation warning for canonizeResults
   "canonizeResults", // Ignore related warning
   "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err", // Ignore Apollo Client hidden warnings
+  "expo-notifications", // Ignore Expo Go notification warnings
 ]);
 
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
@@ -24,6 +25,19 @@ import { setContext } from "@apollo/client/link/context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MainStack from "./src/navigation/MainStack";
 import { AuthProvider } from "./src/context/AuthContext";
+import { ChatProvider } from "./src/context/ChatContext";
+import * as Notifications from "expo-notifications";
+
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 const httpLink = new HttpLink({
   // Use "http://10.0.2.2:4000/graphql" for Android Emulator
@@ -84,16 +98,18 @@ export default function App() {
   return (
     <ApolloProvider client={client}>
       <AuthProvider>
-        <SafeAreaProvider>
-          <SafeAreaView
-            style={styles.container}
-            edges={["top", "bottom", "left", "right"]}
-          >
-            <NavigationContainer>
-              <MainStack />
-            </NavigationContainer>
-          </SafeAreaView>
-        </SafeAreaProvider>
+        <ChatProvider>
+          <SafeAreaProvider>
+            <SafeAreaView
+              style={styles.container}
+              edges={["top", "bottom", "left", "right"]}
+            >
+              <NavigationContainer>
+                <MainStack />
+              </NavigationContainer>
+            </SafeAreaView>
+          </SafeAreaProvider>
+        </ChatProvider>
       </AuthProvider>
     </ApolloProvider>
   );

@@ -58,9 +58,52 @@ const resolvers = {
           createdAt: 'desc'
         }
       });
+    },
+    unreadMessageCount: async (_, __, { user }) => {
+      if (!user) throw new Error('Not authenticated');
+
+      return await prisma.message.count({
+        where: {
+          chat: {
+            participants: {
+              some: { userId: user.id }
+            }
+          },
+          senderId: { not: user.id },
+          read: false
+        }
+      });
     }
   },
   Mutation: {
+    markChatAsRead: async (_, { chatId }, { user }) => {
+      if (!user) throw new Error('Not authenticated');
+
+      // Verify participation
+      const participation = await prisma.chatParticipant.findUnique({
+        where: {
+          chatId_userId: {
+            chatId,
+            userId: user.id
+          }
+        }
+      });
+
+      if (!participation) throw new Error('Not authorized');
+
+      await prisma.message.updateMany({
+        where: {
+          chatId,
+          senderId: { not: user.id },
+          read: false
+        },
+        data: {
+          read: true
+        }
+      });
+
+      return true;
+    },
     createChat: async (_, { userIds, name }, { user }) => {
       if (!user) throw new Error('Not authenticated');
 
@@ -198,6 +241,17 @@ const resolvers = {
         take: 1
       });
       return messages[0];
+    },
+    unreadCount: async (parent, _, { user }) => {
+      if (!user) return 0;
+
+      return await prisma.message.count({
+        where: {
+          chatId: parent.id,
+          senderId: { not: user.id },
+          read: false
+        }
+      });
     }
   }
 };

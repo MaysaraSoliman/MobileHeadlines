@@ -11,6 +11,7 @@ type Chat {
   participants: [ChatParticipant!]!
   messages: [Message!]!
   lastMessage: Message
+  unreadCount: Int
 }
 
 type Message {
@@ -18,17 +19,20 @@ type Message {
   content: String!
   sender: User!
   chat: Chat!
+  read: Boolean
   createdAt: String!
 }
 
 type Query {
   myChats: [Chat!]!
   chatMessages(chatId: ID!): [Message!]!
+  unreadMessageCount: Int
 }
 
 type Mutation {
   createChat(userIds: [ID!]!, name: String): Chat!
   sendMessage(chatId: ID!, content: String!): Message!
+  markChatAsRead(chatId: ID!): Boolean
 }
 
 type Subscription {

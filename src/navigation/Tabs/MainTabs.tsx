@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import * as Notifications from "expo-notifications";
-import { useSubscription } from "@apollo/client";
 import ScreenStacks from "../ScreenStacks";
 import HomeStack from "../Stacks/HomeStack";
 import ChatStack from "../Stacks/ChatStack";
@@ -19,46 +18,12 @@ import AppointmentsStack from "../Stacks/AppointmentsStack";
 import CompaniesStack from "../Stacks/CompaniesStack";
 import TasksStack from "../Stacks/TasksStack";
 import { useAuth } from "../../context/AuthContext";
-import { MESSAGE_RECEIVED_SUBSCRIPTION } from "../../graphql/subscriptions/chat.subscriptions";
-
-// Configure notification handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+import { useChat } from "../../context/ChatContext";
 
 export default function MainTabs() {
   const Tab = createBottomTabNavigator();
   const { user } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Subscribe to new messages for the user
-  useSubscription(MESSAGE_RECEIVED_SUBSCRIPTION, {
-    variables: { userId: user?.id },
-    skip: !user?.id,
-    onData: ({ data }) => {
-      const message = data.data?.messageReceived;
-      if (message) {
-        // Increment badge count
-        setUnreadCount((prev) => prev + 1);
-
-        // Schedule local notification
-        Notifications.scheduleNotificationAsync({
-          content: {
-            title: message.sender.name,
-            body: message.content,
-            data: { chatId: message.chat.id },
-          },
-          trigger: null, // Show immediately
-        });
-      }
-    },
-  });
+  const { unreadCount } = useChat();
 
   // Request permissions on mount
   useEffect(() => {
@@ -120,14 +85,8 @@ export default function MainTabs() {
       <Tab.Screen
         name={ScreenStacks.ChatStack}
         component={ChatStack}
-        listeners={{
-          tabPress: () => {
-            // Reset badge count when opening Chat tab
-            setUnreadCount(0);
-          },
-        }}
         options={{
-          tabBarLabel: "Chat",
+          tabBarLabel: "Chats",
           tabBarIcon: ChatIcon,
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
