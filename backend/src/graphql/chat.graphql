@@ -1,0 +1,37 @@
+type ChatParticipant {
+  user: User!
+}
+
+type Chat {
+  id: ID!
+  name: String
+  isGroup: Boolean
+  createdAt: String!
+  updatedAt: String!
+  participants: [ChatParticipant!]!
+  messages: [Message!]!
+  lastMessage: Message
+}
+
+type Message {
+  id: ID!
+  content: String!
+  sender: User!
+  chat: Chat!
+  createdAt: String!
+}
+
+type Query {
+  myChats: [Chat!]!
+  chatMessages(chatId: ID!): [Message!]!
+}
+
+type Mutation {
+  createChat(userIds: [ID!]!, name: String): Chat!
+  sendMessage(chatId: ID!, content: String!): Message!
+}
+
+type Subscription {
+  messageSent(chatId: ID!): Message!
+  messageReceived(userId: ID!): Message!
+}

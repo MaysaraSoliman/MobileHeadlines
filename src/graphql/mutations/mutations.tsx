@@ -172,3 +172,42 @@ export const DELETE_TASK = gql`
     }
   }
 `;
+
+export const updateUserMutation = gql`
+  mutation UpdateUser($input: UpdateUserInput!) {
+    updateUser(input: $input) {
+      success
+      message
+      user {
+        id
+        name
+        email
+        role
+      }
+    }
+  }
+`;
+
+export const updatePatientMutation = gql`
+  mutation UpdatePatient($input: UpdatePatientInput!) {
+    updatePatient(input: $input) {
+      id
+      firstName
+      lastName
+      phone
+      email
+    }
+  }
+`;
+
+export const createPatientMutation = gql`
+  mutation CreatePatient($input: CreatePatientInput!) {
+    createPatient(input: $input) {
+      id
+      firstName
+      lastName
+      phone
+      email
+    }
+  }
+`;

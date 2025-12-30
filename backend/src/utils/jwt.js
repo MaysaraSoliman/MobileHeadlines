@@ -6,21 +6,31 @@ const getToken = (userId) => {
   return jwt.sign({ userId }, APP_SECRET, { expiresIn: '7d' });
 };
 
+const getUserIdFromToken = (token) => {
+  if (token) {
+    const cleanToken = token.replace('Bearer ', '');
+    try {
+      const { userId } = jwt.verify(cleanToken, APP_SECRET);
+      return userId;
+    } catch (e) {
+      console.warn('Invalid token in subscription connection:', e.message);
+      return null;
+    }
+  }
+  return null;
+};
+
 const getUserId = (req) => {
   const authHeader = req.headers.authorization;
   if (authHeader) {
-    const token = authHeader.replace('Bearer ', '');
-    if (!token) {
-      throw new Error('No token found');
-    }
-    const { userId } = jwt.verify(token, APP_SECRET);
-    return userId;
+    return getUserIdFromToken(authHeader);
   }
-  return null; // Or throw error if auth is required for everything
+  return null;
 };
 
 module.exports = {
   APP_SECRET,
   getToken,
   getUserId,
+  getUserIdFromToken,
 };

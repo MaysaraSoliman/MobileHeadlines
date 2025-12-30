@@ -20,4 +20,8 @@ const TasksIcon = ({ color, size }: { color: string; size: number }) => (
   <Ionicons name="list" size={size} color={color} />
 );
 
-export { HomeIcon, SettingsIcon, AppointmentsIcon, CompaniesIcon, TasksIcon };
+const ChatIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name="chatbubbles" size={size} color={color} />
+);
+
+export { HomeIcon, SettingsIcon, AppointmentsIcon, CompaniesIcon, TasksIcon, ChatIcon };

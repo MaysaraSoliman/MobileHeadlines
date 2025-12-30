@@ -13,7 +13,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../src/context/AuthContext";
 import { updateUserMutation } from "../../src/graphql/mutations/mutations";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 export default function EditProfileScreen() {
   const { user, refreshUser } = useAuth();
@@ -27,7 +27,7 @@ export default function EditProfileScreen() {
     setRefreshing(false);
   }, [refreshUser]);
 
-  const [updateProfile, { loading }] = useMutation(updateUserMutation, {
+  const [updateProfile, { loading }] = useMutation<any>(updateUserMutation, {
     onCompleted: () => {
       (async () => {
         await refreshUser();

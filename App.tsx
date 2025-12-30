@@ -1,13 +1,25 @@
 import React from "react";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { StyleSheet } from "react-native";
+import { StyleSheet, LogBox } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider,
   HttpLink,
+  split,
 } from "@apollo/client";
+
+// Ignore specific warnings
+LogBox.ignoreLogs([
+  "cache.diff", // Ignore Apollo Client deprecation warning for canonizeResults
+  "canonizeResults", // Ignore related warning
+  "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err", // Ignore Apollo Client hidden warnings
+]);
+
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { getMainDefinition } from "@apollo/client/utilities";
+import { createClient } from "graphql-ws";
 import { setContext } from "@apollo/client/link/context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MainStack from "./src/navigation/MainStack";
@@ -18,14 +30,25 @@ const httpLink = new HttpLink({
   // Use "http://192.168.1.11:4000/graphql" for Physical Device (your current Wi-Fi IP)
   // Use "http://localhost:4000/graphql" for iOS Simulator
   // uri: "http://172.20.10.2:4000/graphql", // for Expo Go on Hotspot
-  uri: "http://192.168.1.11:4000/graphql",
+  uri: "http://192.168.1.5:4000/graphql",
   // uri: "http://172.20.10.2:4000/graphql",
 });
+
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: "ws://192.168.1.5:4000/graphql",
+    connectionParams: async () => {
+      const token = await AsyncStorage.getItem("token");
+      return {
+        Authorization: token ? `Bearer ${token}` : "",
+      };
+    },
+  })
+);
 
 const authLink = setContext(async (_, { headers }) => {
   // get the authentication token from local storage if it exists
   const token = await AsyncStorage.getItem("token");
-  console.log("token", token);
 
   // Debug log to verify token is being passed
   // console.log("🔑 Auth Token:", token ? "Present" : "Missing");
@@ -39,9 +62,21 @@ const authLink = setContext(async (_, { headers }) => {
   };
 });
 
+const splitLink = split(
+  ({ query }: { query: any }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
+    );
+  },
+  wsLink,
+  authLink.concat(httpLink)
+);
+
 // Initialize Apollo Client
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: splitLink,
   cache: new InMemoryCache(),
 });
 
