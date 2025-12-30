@@ -25,11 +25,13 @@ const createTask = async (_, { input }, { prisma, user: authUser }) => {
     createdById: authUser.id,
   };
 
-  if (dueDate) data.dueDate = new Date(dueDate);
+  // Ensure dueDate is stored as UTC Midnight to prevent timezone shifting
+  if (dueDate) data.dueDate = dayjs.utc(dueDate).startOf('day').toDate();
+
   if (assignedToId) {
-      const assignee = await prisma.user.findUnique({ where: { id: assignedToId } });
-      if (!assignee) throw new Error('Assigned user not found');
-      data.assignedToId = assignedToId;
+    const assignee = await prisma.user.findUnique({ where: { id: assignedToId } });
+    if (!assignee) throw new Error('Assigned user not found');
+    data.assignedToId = assignedToId;
   }
 
   const task = await prisma.task.create({
@@ -56,20 +58,20 @@ const updateTask = async (_, { input }, { prisma, user: authUser }) => {
   const isAdmin = authUser.role === 'ADMIN';
 
   if (!isCreator && !isAssignee && !isAdmin) {
-      throw new Error('Not authorized to update this task');
+    throw new Error('Not authorized to update this task');
   }
 
   const data = {};
 
   if (isCreator || isAdmin) {
-      if (title !== undefined) data.title = title;
-      if (description !== undefined) data.description = description;
-      if (priority !== undefined) data.priority = priority;
-      if (dueDate !== undefined) data.dueDate = new Date(dueDate);
-      if (assignedToId !== undefined) data.assignedToId = assignedToId;
-      if (status !== undefined) data.status = status;
+    if (title !== undefined) data.title = title;
+    if (description !== undefined) data.description = description;
+    if (priority !== undefined) data.priority = priority;
+    if (dueDate !== undefined) data.dueDate = dayjs.utc(dueDate).startOf('day').toDate();
+    if (assignedToId !== undefined) data.assignedToId = assignedToId;
+    if (status !== undefined) data.status = status;
   } else if (isAssignee) {
-      if (status !== undefined) data.status = status;
+    if (status !== undefined) data.status = status;
   }
 
   const task = await prisma.task.update({
@@ -94,7 +96,7 @@ const deleteTask = async (_, { id }, { prisma, user: authUser }) => {
   const isAdmin = authUser.role === 'ADMIN';
 
   if (!isCreator && !isAdmin) {
-      throw new Error('Not authorized to delete this task');
+    throw new Error('Not authorized to delete this task');
   }
 
   const task = await prisma.task.delete({

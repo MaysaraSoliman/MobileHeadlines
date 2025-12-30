@@ -19,6 +19,9 @@ import { RootStackParamList } from "../../src/navigation/NavigationTypes";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import { Ionicons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 type TaskDetailsScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -153,7 +156,7 @@ export default function TaskDetailsScreen() {
         <Text style={styles.label}>Due Date</Text>
         <Text style={styles.text}>
           {task.dueDate
-            ? dayjs(task.dueDate).format("MMM DD, YYYY")
+            ? dayjs.utc(task.dueDate).format("MMM DD, YYYY")
             : "No due date"}
         </Text>
       </View>

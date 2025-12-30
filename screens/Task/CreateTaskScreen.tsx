@@ -53,7 +53,9 @@ export default function CreateTaskScreen() {
           title,
           description,
           priority,
-          dueDate: dueDate.toISOString(),
+          // FIX: Send date as YYYY-MM-DD string to ensure backend treats it as UTC Midnight.
+          // Using toISOString() would convert local midnight (e.g. 00:00) to previous day UTC (e.g. 22:00).
+          dueDate: dayjs(dueDate).format("YYYY-MM-DD"),
           assignedToId: assignedToId || null,
           status: "PENDING",
         },

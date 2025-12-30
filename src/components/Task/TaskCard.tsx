@@ -2,7 +2,11 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { getPriorityColor, getTaskStatusColor } from "../../utils/taskUtils";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { Ionicons } from "@expo/vector-icons";
+
+dayjs.extend(utc);
+
 import { Task } from "../../types/types";
 
 interface TaskCardProps {
@@ -26,7 +30,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           <Text style={styles.date}>
             <Ionicons name="calendar-outline" size={12} color="#666" />{" "}
             {task.dueDate
-              ? dayjs(task.dueDate).format("MMM DD, YYYY")
+              ? dayjs.utc(task.dueDate).format("MMM DD, YYYY")
               : "No Due Date"}
           </Text>
         </View>
