@@ -11,7 +11,13 @@ import {
   ActivityIndicator,
   Keyboard,
 } from "react-native";
-import { useQuery, useMutation, gql } from "@apollo/client";
+import {
+  useQuery,
+  useMutation,
+  useSubscription,
+  useApolloClient,
+  gql,
+} from "@apollo/client";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/context/AuthContext";
@@ -91,35 +97,135 @@ export default function ChatRoomScreen() {
     };
   }, [name, navigation, chatId]);
 
-  const { data, loading, error, subscribeToMore } = useQuery(
-    GET_CHAT_MESSAGES,
-    {
-      variables: { chatId },
-      fetchPolicy: "cache-and-network",
-    }
-  );
+  const { data, loading, error } = useQuery(GET_CHAT_MESSAGES, {
+    variables: { chatId },
+    fetchPolicy: "cache-and-network",
+  });
 
-  useEffect(() => {
-    const unsubscribe = subscribeToMore({
-      document: MESSAGE_SENT_SUBSCRIPTION,
-      variables: { chatId },
-      updateQuery: (prev, { subscriptionData }) => {
-        if (!subscriptionData.data) return prev;
-        const newMessage = subscriptionData.data.messageSent;
+  const client = useApolloClient();
 
-        // Check if message already exists (optimistic update or duplicate)
-        if (prev.chatMessages.some((msg: any) => msg.id === newMessage.id)) {
-          return prev;
+  useSubscription(MESSAGE_SENT_SUBSCRIPTION, {
+    variables: { chatId },
+    onData: ({ data }: { data: any }) => {
+      const newMessage = data.data?.messageSent;
+      if (!newMessage) return;
+
+      // Mark as read if it's from others
+      if (newMessage.sender.id !== user?.id) {
+        markAsRead(chatId);
+      }
+
+      try {
+        const existingData: any = client.readQuery({
+          query: GET_CHAT_MESSAGES,
+          variables: { chatId },
+        });
+
+        if (!existingData) return;
+
+        // Check for duplicates
+        if (
+          existingData.chatMessages.some((msg: any) => msg.id === newMessage.id)
+        ) {
+          return;
         }
 
-        return {
-          ...prev,
-          chatMessages: [newMessage, ...prev.chatMessages],
-        };
-      },
-    });
-    return () => unsubscribe();
-  }, [chatId, subscribeToMore]);
+        client.writeQuery({
+          query: GET_CHAT_MESSAGES,
+          variables: { chatId },
+          data: {
+            chatMessages: [newMessage, ...existingData.chatMessages],
+          },
+        });
+
+        // ALSO update the ChatList cache if we are in the chat room
+        // This ensures that when we go back, the list is already updated with the last message
+        try {
+          const listData: any = client.readQuery({
+            query: gql`
+              query MyChats {
+                myChats {
+                  id
+                  name
+                  isGroup
+                  participants {
+                    user {
+                      id
+                      name
+                      email
+                    }
+                  }
+                  messages {
+                    content
+                    createdAt
+                  }
+                  updatedAt
+                  unreadCount
+                }
+              }
+            `,
+          });
+
+          if (listData?.myChats) {
+            const chatIndex = listData.myChats.findIndex(
+              (c: any) => c.id === chatId
+            );
+            if (chatIndex > -1) {
+              const newChats = [...listData.myChats];
+              const chatToUpdate = { ...newChats[chatIndex] };
+
+              chatToUpdate.messages = [
+                {
+                  __typename: "Message",
+                  content: newMessage.content,
+                  createdAt: newMessage.createdAt,
+                },
+              ];
+              chatToUpdate.updatedAt = newMessage.createdAt;
+              chatToUpdate.unreadCount = 0; // We are reading it now
+
+              newChats.splice(chatIndex, 1);
+              newChats.unshift(chatToUpdate);
+
+              client.writeQuery({
+                query: gql`
+                  query MyChats {
+                    myChats {
+                      id
+                      name
+                      isGroup
+                      participants {
+                        user {
+                          id
+                          name
+                          email
+                        }
+                      }
+                      messages {
+                        content
+                        createdAt
+                      }
+                      updatedAt
+                      unreadCount
+                    }
+                  }
+                `,
+                data: { myChats: newChats },
+              });
+            }
+          }
+        } catch (error_) {
+          // It's okay if this fails, the list might not be in cache yet
+          console.debug(
+            "Cache update failed (expected if list not loaded):",
+            error_
+          );
+        }
+      } catch (e) {
+        console.error("Error updating cache in ChatRoomScreen:", e);
+      }
+    },
+  });
 
   const [sendMessage] = useMutation(SEND_MESSAGE, {
     // onCompleted: () => setMessageText(""), // Moved to handleSend for better control
@@ -174,6 +280,86 @@ export default function ChatRoomScreen() {
                 chatMessages: [sendMessage, ...existingData.chatMessages],
               },
             });
+          }
+
+          // Update ChatList cache for the sender
+          try {
+            const listData: any = cache.readQuery({
+              query: gql`
+                query MyChats {
+                  myChats {
+                    id
+                    name
+                    isGroup
+                    participants {
+                      user {
+                        id
+                        name
+                        email
+                      }
+                    }
+                    messages {
+                      content
+                      createdAt
+                    }
+                    updatedAt
+                    unreadCount
+                  }
+                }
+              `,
+            });
+
+            if (listData?.myChats) {
+              const chatIndex = listData.myChats.findIndex(
+                (c: any) => c.id === chatId
+              );
+              if (chatIndex > -1) {
+                const newChats = [...listData.myChats];
+                const chatToUpdate = { ...newChats[chatIndex] };
+
+                chatToUpdate.messages = [
+                  {
+                    __typename: "Message",
+                    content: sendMessage.content,
+                    createdAt: sendMessage.createdAt,
+                  },
+                ];
+                chatToUpdate.updatedAt = sendMessage.createdAt;
+                // Don't change unreadCount for sender
+
+                newChats.splice(chatIndex, 1);
+                newChats.unshift(chatToUpdate);
+
+                cache.writeQuery({
+                  query: gql`
+                    query MyChats {
+                      myChats {
+                        id
+                        name
+                        isGroup
+                        participants {
+                          user {
+                            id
+                            name
+                            email
+                          }
+                        }
+                        messages {
+                          content
+                          createdAt
+                        }
+                        updatedAt
+                        unreadCount
+                      }
+                    }
+                  `,
+                  data: { myChats: newChats },
+                });
+              }
+            }
+          } catch (e) {
+            // Ignore cache update errors for the chat list as it might not be loaded
+            console.debug("Sender cache update failed (safe to ignore):", e);
           }
         },
       });

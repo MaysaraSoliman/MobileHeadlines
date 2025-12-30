@@ -117,9 +117,6 @@ const resolvers = {
             AND: [
               { participants: { some: { userId: user.id } } },
               { participants: { some: { userId: otherUserId } } },
-              // We want to ensure it's a 1-on-1 chat, not just a group chat containing these two.
-              // Assuming 1-on-1 chats have exactly 2 participants.
-              // This logic can be refined if you have an 'isGroup' flag (which we added).
               { isGroup: false }
             ]
           },
@@ -177,7 +174,11 @@ const resolvers = {
           sender: true,
           chat: {
             include: {
-              participants: true
+              participants: {
+                include: {
+                  user: true
+                }
+              }
             }
           }
         }
@@ -189,9 +190,12 @@ const resolvers = {
         data: { updatedAt: new Date() }
       });
 
+      // Publish to BOTH subscriptions
       pubsub.publish('MESSAGE_SENT', {
         messageSent: message
       });
+
+      console.log('📤 Published MESSAGE_SENT for message:', message.id);
 
       return message;
     }
@@ -200,9 +204,8 @@ const resolvers = {
     messageSent: {
       subscribe: withFilter(
         () => pubsub.asyncIterableIterator(['MESSAGE_SENT']),
-        (payload, variables, context) => {
-          // payload.messageSent is the message object
-          // variables.chatId is what the client subscribed to
+        (payload, variables) => {
+          // For ChatRoomScreen - only messages in this specific chat
           return payload.messageSent.chatId === variables.chatId;
         }
       )
@@ -210,27 +213,35 @@ const resolvers = {
     messageReceived: {
       subscribe: withFilter(
         () => pubsub.asyncIterableIterator(['MESSAGE_SENT']),
-        (payload, variables, context) => {
-          // payload.messageSent is the message object
-          // variables.chatId is what the client subscribed to
+        (payload, variables) => {
           const message = payload.messageSent;
 
-          console.log("📨 Filtering message:", message.id, "for user:", variables.userId);
+          console.log("📨 Filtering messageReceived:", {
+            messageId: message.id,
+            senderId: message.senderId,
+            subscriberUserId: variables.userId,
+            chatId: message.chatId
+          });
 
-          // If sender is the user itself, don't notify (optional, but good UX)
-          if (message.senderId === variables.userId) {
-            console.log("  -> Skipping: Sender is recipient");
-            return false;
-          }
+          // IMPORTANT: Don't filter out the sender's own messages here!
+          // The client will handle whether to show/increment based on currentChatId
 
           // Check if user is in participants
-          // Note: The sendMessage mutation includes chat.participants in the result
           if (message.chat?.participants) {
-            const isParticipant = message.chat.participants.some(p => p.userId === variables.userId);
-            console.log("  -> Is participant?", isParticipant);
-            return isParticipant;
+            const isParticipant = message.chat.participants.some(
+              p => p.userId === variables.userId
+            );
+
+            if (isParticipant) {
+              console.log("  ✅ User IS participant, sending message");
+              return true;
+            } else {
+              console.log("  ❌ User NOT participant, skipping");
+              return false;
+            }
           }
-          console.log("  -> Skipping: No participants found in payload");
+
+          console.log("  ⚠️ No participants found in payload");
           return false;
         }
       ),
@@ -256,13 +267,16 @@ const resolvers = {
     unreadCount: async (parent, _, { user }) => {
       if (!user) return 0;
 
-      return await prisma.message.count({
+      const count = await prisma.message.count({
         where: {
           chatId: parent.id,
           senderId: { not: user.id },
           read: false
         }
       });
+
+      console.log(`📊 Unread count for chat ${parent.id}: ${count}`);
+      return count;
     }
   }
 };
