@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { gql, useQuery, useSubscription, useMutation, useApolloClient } from "@apollo/client";
+import {
+  gql,
+  useQuery,
+  useSubscription,
+  useMutation,
+  useApolloClient,
+} from "@apollo/client";
 import { useAuth } from "./AuthContext";
 import * as Notifications from "expo-notifications";
 
@@ -69,6 +75,10 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     variables: { userId: user?.id },
     skip: !user,
     onData: ({ data }) => {
+      console.log(
+        "🔔 Subscription received data:",
+        JSON.stringify(data, null, 2)
+      );
       const message = data.data?.messageReceived;
       if (message) {
         // If we are currently in this chat, mark as read immediately (or don't increment)
@@ -77,7 +87,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           markAsRead(message.chat.id);
         } else {
           // Increment badge count
-          setUnreadCount((prev) => prev + 1);
+          setUnreadCount((prev) => {
+            console.log(
+              "📈 Incrementing unread count. Previous:",
+              prev,
+              "New:",
+              prev + 1
+            );
+            return prev + 1;
+          });
 
           // Show notification
           Notifications.scheduleNotificationAsync({
@@ -90,6 +108,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           });
         }
       }
+    },
+    onError: (err) => {
+      console.error("🔴 Subscription error:", err);
     },
   });
 

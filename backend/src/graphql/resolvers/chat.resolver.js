@@ -211,21 +211,32 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterableIterator(['MESSAGE_SENT']),
         (payload, variables, context) => {
-          // Check if the user is a participant in the chat
-          // We need the chat participants to be included in the message payload
+          // payload.messageSent is the message object
+          // variables.chatId is what the client subscribed to
           const message = payload.messageSent;
 
+          console.log("📨 Filtering message:", message.id, "for user:", variables.userId);
+
           // If sender is the user itself, don't notify (optional, but good UX)
-          if (message.senderId === variables.userId) return false;
+          if (message.senderId === variables.userId) {
+            console.log("  -> Skipping: Sender is recipient");
+            return false;
+          }
 
           // Check if user is in participants
           // Note: The sendMessage mutation includes chat.participants in the result
           if (message.chat?.participants) {
-            return message.chat.participants.some(p => p.userId === variables.userId);
+            const isParticipant = message.chat.participants.some(p => p.userId === variables.userId);
+            console.log("  -> Is participant?", isParticipant);
+            return isParticipant;
           }
+          console.log("  -> Skipping: No participants found in payload");
           return false;
         }
-      )
+      ),
+      resolve: (payload) => {
+        return payload.messageSent;
+      }
     }
   },
   Chat: {
