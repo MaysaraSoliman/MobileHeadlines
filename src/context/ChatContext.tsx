@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   gql,
   useQuery,
@@ -116,31 +123,33 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [markChatAsReadMutation] = useMutation(MARK_CHAT_READ);
 
-  const markAsRead = async (chatId: string) => {
-    try {
-      await markChatAsReadMutation({ variables: { chatId } });
-      // Refetch count to ensure accuracy
-      const { data } = await refetch();
-      if (data) {
-        setUnreadCount(data.unreadMessageCount);
+  const markAsRead = useCallback(
+    async (chatId: string) => {
+      try {
+        await markChatAsReadMutation({ variables: { chatId } });
+        // Refetch count to ensure accuracy
+        const { data } = await refetch();
+        if (data) {
+          setUnreadCount(data.unreadMessageCount);
+        }
+      } catch (e) {
+        console.error("Error marking chat as read:", e);
       }
-    } catch (e) {
-      console.error("Error marking chat as read:", e);
-    }
-  };
-
-  return (
-    <ChatContext.Provider
-      value={{
-        unreadCount,
-        markAsRead,
-        currentChatId,
-        setCurrentChatId,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
+    },
+    [markChatAsReadMutation, refetch]
   );
+
+  const value = useMemo(
+    () => ({
+      unreadCount,
+      markAsRead,
+      currentChatId,
+      setCurrentChatId,
+    }),
+    [unreadCount, markAsRead, currentChatId]
+  );
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
 
 export const useChat = () => {

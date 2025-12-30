@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { StyleSheet, LogBox } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  useNavigationContainerRef,
+} from "@react-navigation/native";
+import ScreenStacks from "./src/navigation/ScreenStacks";
 import {
   ApolloClient,
   InMemoryCache,
@@ -31,7 +35,6 @@ import * as Notifications from "expo-notifications";
 // Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -95,6 +98,71 @@ const client = new ApolloClient({
 });
 
 export default function App() {
+  const navigationRef = useNavigationContainerRef();
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
+
+  useEffect(() => {
+    // Listener for when a user taps on a notification while the app is running (foreground or background)
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data as {
+          chatId?: string;
+        };
+        if (data?.chatId) {
+          navigateToChat(data.chatId);
+        }
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (
+      lastNotificationResponse &&
+      lastNotificationResponse.actionIdentifier ===
+        Notifications.DEFAULT_ACTION_IDENTIFIER
+    ) {
+      const data = lastNotificationResponse.notification.request.content
+        .data as {
+        chatId?: string;
+      };
+      if (data?.chatId && navigationRef.isReady()) {
+        navigateToChat(data.chatId);
+      }
+    }
+  }, [lastNotificationResponse]);
+
+  const navigateToChat = (chatId: string) => {
+    if (navigationRef.isReady()) {
+      // @ts-ignore - Ignoring type check for complex nested navigation
+      navigationRef.navigate(ScreenStacks.MainTabs, {
+        screen: ScreenStacks.ChatStack,
+        params: {
+          screen: "ChatRoom",
+          params: { chatId },
+        },
+      });
+    }
+  };
+
+  const onNavigationReady = () => {
+    // Check if app was opened by a notification (cold start)
+    if (
+      lastNotificationResponse &&
+      lastNotificationResponse.actionIdentifier ===
+        Notifications.DEFAULT_ACTION_IDENTIFIER
+    ) {
+      const data = lastNotificationResponse.notification.request.content
+        .data as {
+        chatId?: string;
+      };
+      if (data?.chatId) {
+        navigateToChat(data.chatId);
+      }
+    }
+  };
+
   return (
     <ApolloProvider client={client}>
       <AuthProvider>
@@ -104,7 +172,10 @@ export default function App() {
               style={styles.container}
               edges={["top", "bottom", "left", "right"]}
             >
-              <NavigationContainer>
+              <NavigationContainer
+                ref={navigationRef}
+                onReady={onNavigationReady}
+              >
                 <MainStack />
               </NavigationContainer>
             </SafeAreaView>
