@@ -34,4 +34,6 @@ type Mutation {
   createTask(input: CreateTaskInput!): Task!
   updateTask(input: UpdateTaskInput!): Task!
   deleteTask(id: ID!): Task!
+
+  registerPushToken(token: String!): Boolean
 }

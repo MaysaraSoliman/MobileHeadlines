@@ -173,6 +173,12 @@ export const DELETE_TASK = gql`
   }
 `;
 
+export const REGISTER_PUSH_TOKEN = gql`
+  mutation RegisterPushToken($token: String!) {
+    registerPushToken(token: $token)
+  }
+`;
+
 export const updateUserMutation = gql`
   mutation UpdateUser($input: UpdateUserInput!) {
     updateUser(input: $input) {

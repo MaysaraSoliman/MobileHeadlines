@@ -1,5 +1,6 @@
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
+const { sendPushNotification } = require('../../utils/notifications');
 dayjs.extend(utc);
 
 const formatTask = (task) => {
@@ -42,15 +43,49 @@ const createTask = async (_, { input }, { prisma, user: authUser }) => {
     }
   });
 
+  // Notification Logic
+  if (task.assignedToId && task.assignedToId !== authUser.id && task.assignedTo?.pushToken) {
+    sendPushNotification(
+      task.assignedTo.pushToken,
+      'New Task Assigned',
+      `${authUser.name || 'Someone'} assigned you a new task: ${task.title}`,
+      { taskId: task.id }
+    );
+  }
+
   return formatTask(task);
+};
+
+const buildUpdateData = (input, isCreatorOrAdmin) => {
+  const { title, description, status, priority, dueDate, assignedToId } = input;
+  const data = {};
+
+  // Status can be updated by any authorized user (Creator, Admin, or Assignee)
+  if (status !== undefined) {
+    data.status = status;
+  }
+
+  // If user is not Creator or Admin (meaning they are just Assignee), they can't update other fields
+  if (!isCreatorOrAdmin) {
+    return data;
+  }
+
+  // Creator or Admin can update all other fields
+  if (title !== undefined) data.title = title;
+  if (description !== undefined) data.description = description;
+  if (priority !== undefined) data.priority = priority;
+  if (dueDate !== undefined) data.dueDate = dayjs.utc(dueDate).startOf('day').toDate();
+  if (assignedToId !== undefined) data.assignedToId = assignedToId;
+
+  return data;
 };
 
 const updateTask = async (_, { input }, { prisma, user: authUser }) => {
   if (!authUser) throw new Error('Not authenticated');
 
-  const { id, title, description, status, priority, dueDate, assignedToId } = input;
-
+  const { id } = input;
   const existingTask = await prisma.task.findUnique({ where: { id } });
+
   if (!existingTask) throw new Error('Task not found');
 
   const isCreator = existingTask.createdById === authUser.id;
@@ -61,18 +96,7 @@ const updateTask = async (_, { input }, { prisma, user: authUser }) => {
     throw new Error('Not authorized to update this task');
   }
 
-  const data = {};
-
-  if (isCreator || isAdmin) {
-    if (title !== undefined) data.title = title;
-    if (description !== undefined) data.description = description;
-    if (priority !== undefined) data.priority = priority;
-    if (dueDate !== undefined) data.dueDate = dayjs.utc(dueDate).startOf('day').toDate();
-    if (assignedToId !== undefined) data.assignedToId = assignedToId;
-    if (status !== undefined) data.status = status;
-  } else if (isAssignee) {
-    if (status !== undefined) data.status = status;
-  }
+  const data = buildUpdateData(input, isCreator || isAdmin);
 
   const task = await prisma.task.update({
     where: { id },

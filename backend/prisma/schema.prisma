@@ -59,6 +59,7 @@ model User {
   assignedTasks    Task[]            @relation("AssignedTasks")
   chatParticipants ChatParticipant[]
   messages         Message[]
+  pushToken        String?
 }
 
 model Chat {

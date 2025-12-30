@@ -30,6 +30,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import MainStack from "./src/navigation/MainStack";
 import { AuthProvider } from "./src/context/AuthContext";
 import { ChatProvider } from "./src/context/ChatContext";
+import { NotificationController } from "./src/components/NotificationController";
 import * as Notifications from "expo-notifications";
 
 // Configure notification handler
@@ -167,6 +168,7 @@ export default function App() {
     <ApolloProvider client={client}>
       <AuthProvider>
         <ChatProvider>
+          <NotificationController />
           <SafeAreaProvider>
             <SafeAreaView
               style={styles.container}
