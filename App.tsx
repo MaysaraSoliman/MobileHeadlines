@@ -6,6 +6,7 @@ import {
   useNavigationContainerRef,
 } from "@react-navigation/native";
 import ScreenStacks from "./src/navigation/ScreenStacks";
+import ScreenNames from "./src/navigation/ScreenNames";
 import {
   ApolloClient,
   InMemoryCache,
@@ -108,9 +109,12 @@ export default function App() {
       (response) => {
         const data = response.notification.request.content.data as {
           chatId?: string;
+          taskId?: string;
         };
         if (data?.chatId) {
           navigateToChat(data.chatId);
+        } else if (data?.taskId) {
+          navigateToTask(data.taskId);
         }
       }
     );
@@ -127,9 +131,14 @@ export default function App() {
       const data = lastNotificationResponse.notification.request.content
         .data as {
         chatId?: string;
+        taskId?: string;
       };
-      if (data?.chatId && navigationRef.isReady()) {
-        navigateToChat(data.chatId);
+      if (navigationRef.isReady()) {
+        if (data?.chatId) {
+          navigateToChat(data.chatId);
+        } else if (data?.taskId) {
+          navigateToTask(data.taskId);
+        }
       }
     }
   }, [lastNotificationResponse]);
@@ -147,6 +156,19 @@ export default function App() {
     }
   };
 
+  const navigateToTask = (taskId: string) => {
+    if (navigationRef.isReady()) {
+      // @ts-ignore - Ignoring type check for complex nested navigation
+      navigationRef.navigate(ScreenStacks.MainTabs, {
+        screen: ScreenStacks.TasksStack,
+        params: {
+          screen: ScreenNames.TaskDetailsScreen,
+          params: { taskId },
+        },
+      });
+    }
+  };
+
   const onNavigationReady = () => {
     // Check if app was opened by a notification (cold start)
     if (
@@ -157,9 +179,12 @@ export default function App() {
       const data = lastNotificationResponse.notification.request.content
         .data as {
         chatId?: string;
+        taskId?: string;
       };
       if (data?.chatId) {
         navigateToChat(data.chatId);
+      } else if (data?.taskId) {
+        navigateToTask(data.taskId);
       }
     }
   };
