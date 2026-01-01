@@ -7,7 +7,10 @@ const me = async (parent, args, context) => {
   });
 };
 
-const users = async (_, { role }, { prisma }) => {
+const users = async (_, { role }, { prisma, user }) => {
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
   const where = role ? { role } : {};
   return await prisma.user.findMany({
     where,

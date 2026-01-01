@@ -60,6 +60,17 @@ model User {
   chatParticipants ChatParticipant[]
   messages         Message[]
   pushToken        String?
+  loginTokens      LoginToken[]
+}
+
+model LoginToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model Chat {

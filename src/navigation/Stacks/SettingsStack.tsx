@@ -5,6 +5,9 @@ import ScreenNames from "../ScreenNames";
 import SettingsScreen from "../../../screens/SettingsScreen/SettingsScreen";
 import EditProfileScreen from "../../../screens/EditProfileScreen/EditProfileScreen";
 
+import GenerateQRScreen from "../../../screens/SettingsScreen/GenerateQRScreen";
+import UsersListScreen from "../../../screens/SettingsScreen/UsersListScreen";
+
 const Stack = createStackNavigator();
 
 export default function SettingsStack() {
@@ -22,6 +25,14 @@ export default function SettingsStack() {
       <Stack.Screen
         name={ScreenNames.EditProfileScreen}
         component={EditProfileScreen}
+      />
+      <Stack.Screen
+        name={ScreenNames.GenerateQRScreen}
+        component={GenerateQRScreen}
+      />
+      <Stack.Screen
+        name={ScreenNames.UsersListScreen}
+        component={UsersListScreen}
       />
     </Stack.Navigator>
   );

@@ -5,7 +5,7 @@ import React, {
   useState,
   useMemo,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { gql, useQuery, useApolloClient } from "@apollo/client";
 
 const ME_QUERY = gql`
@@ -14,6 +14,7 @@ const ME_QUERY = gql`
       id
       email
       name
+      role
       createdAt
       updatedAt
     }
@@ -24,6 +25,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -64,7 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
+        const token = await SecureStore.getItemAsync("token");
         if (token) {
           // If token exists, try to fetch user
           const result = await refetch();
@@ -75,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (e) {
         console.log("Failed to load user session", e);
         // If error (e.g. token expired), clear it
-        await AsyncStorage.removeItem("token");
+        await SecureStore.deleteItemAsync("token");
       } finally {
         setInitializing(false);
       }
@@ -85,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (token: string) => {
     try {
-      await AsyncStorage.setItem("token", token);
+      await SecureStore.setItemAsync("token", token);
       // Reset store to clear any old data and ensure fresh headers are used
       await client.resetStore();
       const result = await refetch();
@@ -98,9 +100,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await AsyncStorage.removeItem("token");
-    setUser(null);
-    await client.clearStore();
+    try {
+      await SecureStore.deleteItemAsync("token");
+      setUser(null);
+      await client.clearStore();
+    } catch (e) {
+      console.error("Sign out error", e);
+    }
   };
 
   // If query returns data, sync it (in case of background refetches)

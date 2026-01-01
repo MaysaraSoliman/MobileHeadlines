@@ -25,28 +25,48 @@ export default function SettingsScreen() {
     setRefreshing(false);
   }, [refreshUser]);
 
-  const sections = [
+  const accountItems = [
     {
-      items: [
-        {
-          icon: "create-outline",
-          label: "Edit Profile",
-          type: "ionicons",
-          screen: ScreenNames.EditProfileScreen,
-        },
-        {
-          icon: "settings-outline",
-          label: "Account Settings",
-          type: "ionicons",
-        },
-        {
-          icon: "phone-portrait-outline",
-          label: "App Settings",
-          type: "ionicons",
-        },
-      ],
+      icon: "create-outline",
+      label: "Edit Profile",
+      type: "ionicons",
+      screen: ScreenNames.EditProfileScreen,
     },
     {
+      icon: "settings-outline",
+      label: "Account Settings",
+      type: "ionicons",
+      screen: ScreenNames.EditProfileScreen,
+    },
+    {
+      icon: "phone-portrait-outline",
+      label: "App Settings",
+      type: "ionicons",
+    },
+    {
+      icon: "qr-code-outline",
+      label: "Login on another device",
+      type: "ionicons",
+      screen: ScreenNames.GenerateQRScreen,
+    },
+  ];
+
+  if (user?.role === "ADMIN") {
+    accountItems.push({
+      icon: "people-outline",
+      label: "User Management",
+      type: "ionicons",
+      screen: ScreenNames.UsersListScreen,
+    });
+  }
+
+  const sections = [
+    {
+      id: "account",
+      items: accountItems,
+    },
+    {
+      id: "support",
       items: [
         {
           icon: "help-circle-outline",
@@ -66,6 +86,7 @@ export default function SettingsScreen() {
       ],
     },
     {
+      id: "domains",
       items: [{ icon: "language", label: "All Domains", type: "material" }],
     },
   ];
@@ -110,8 +131,8 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {sections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
+        {sections.map((section) => (
+          <View key={`section-${section.id}`} style={styles.section}>
             {section.items.map((item, itemIndex) => (
               <TouchableOpacity
                 key={item.label}

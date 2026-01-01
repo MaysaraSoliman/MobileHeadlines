@@ -14,7 +14,8 @@ import {
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { gql, useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 import ScreenStacks from "../../src/navigation/ScreenStacks";
 import ScreenNames from "../../src/navigation/ScreenNames";
 import { useAuth } from "../../src/context/AuthContext";
@@ -37,6 +38,7 @@ const LOGIN_MUTATION = gql`
 type RootStackParamList = {
   [ScreenStacks.MainTabs]: undefined;
   [ScreenNames.RegisterScreen]: undefined;
+  [ScreenNames.LoginWithQRScreen]: undefined;
 };
 
 type AuthNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -119,6 +121,16 @@ export default function AuthScreen() {
             ) : (
               <Text style={styles.loginButtonText}>Log In</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.loginButton,
+              { backgroundColor: "#5856D6", marginTop: 15 },
+            ]}
+            onPress={() => navigate(ScreenNames.LoginWithQRScreen)}
+          >
+            <Text style={styles.loginButtonText}>Login with QR / Token</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

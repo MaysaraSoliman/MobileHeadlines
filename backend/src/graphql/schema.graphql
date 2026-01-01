@@ -16,6 +16,8 @@ type Query {
 type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
+  loginWithToken(token: String!): AuthPayload!
+  generateLoginToken(userId: ID!): String!
   updateUser(input: UpdateUserInput!): UpdatedUserResponse!
   
   createCompany(input: CreateCompanyInput!): Company!

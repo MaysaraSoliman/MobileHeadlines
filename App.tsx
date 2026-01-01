@@ -27,7 +27,7 @@ import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from "graphql-ws";
 import { setContext } from "@apollo/client/link/context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import MainStack from "./src/navigation/MainStack";
 import { AuthProvider } from "./src/context/AuthContext";
 import { ChatProvider } from "./src/context/ChatContext";
@@ -49,15 +49,15 @@ const httpLink = new HttpLink({
   // Use "http://192.168.1.11:4000/graphql" for Physical Device (your current Wi-Fi IP)
   // Use "http://localhost:4000/graphql" for iOS Simulator
   // uri: "http://172.20.10.2:4000/graphql", // for Expo Go on Hotspot
-  uri: "http://192.168.1.5:4000/graphql",
+  uri: "http://192.168.1.11:4000/graphql",
   // uri: "http://172.20.10.2:4000/graphql",
 });
 
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: "ws://192.168.1.5:4000/graphql",
+    url: "ws://192.168.1.11:4000/graphql",
     connectionParams: async () => {
-      const token = await AsyncStorage.getItem("token");
+      const token = await SecureStore.getItemAsync("token");
       return {
         Authorization: token ? `Bearer ${token}` : "",
       };
@@ -67,7 +67,7 @@ const wsLink = new GraphQLWsLink(
 
 const authLink = setContext(async (_, { headers }) => {
   // get the authentication token from local storage if it exists
-  const token = await AsyncStorage.getItem("token");
+  const token = await SecureStore.getItemAsync("token");
 
   // Debug log to verify token is being passed
   // console.log("🔑 Auth Token:", token ? "Present" : "Missing");

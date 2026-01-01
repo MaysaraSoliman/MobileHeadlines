@@ -1,7 +1,10 @@
 enum ScreenNames {
   AuthScreen = "AuthScreen",
   RegisterScreen = "RegisterScreen",
-  HomeScreen = "HomeScreen",
+  LoginWithQRScreen = "LoginWithQRScreen",
+  GenerateQRScreen = "GenerateQRScreen",
+  UsersListScreen = "UsersListScreen",
+ HomeScreen = "HomeScreen",
   ArticleDetails = "ArticleDetails",
   SettingsScreen = "SettingsScreen",
   EditProfileScreen = "EditProfileScreen",
